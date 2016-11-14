@@ -2,4 +2,17 @@
     <string name="app_name">OpenApp</string>
     <string name="on">On</string>
     <string name="off">Off</string>
+    <string name="running_state">Running</string>
+    <string name="stopped_state">Stopped</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="gate_num_prompt">Gate Telephone</string>
+    <string name="gate_location">Gate Location</string>
+    <string name="gate_phone_pref">GatePhone</string>
+    <string name="gate_longitude_pref">GateLongitude</string>
+    <string name="gate_latitude_pref">GateLatitude</string>
+    <string name="running">Running</string>
+    <string name="save">Save</string>
+    <string name="clear">Clear</string>
+    <string name="must_set_lat_long">Gate location not set</string>
 </resources>
