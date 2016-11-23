@@ -15,4 +15,11 @@
     <string name="save">Save</string>
     <string name="clear">Clear</string>
     <string name="must_set_lat_long">Gate location not set</string>
+    <string name="title_activity_config">ConfigActivity</string>
+    <string name="phone_hint">Enter Phone Number</string>
+    <string name="location_button">Gate Location</string>
+    <string name="phone_required">Phone Number Required</string>
+    <string name="configuration_prompt">OpenApp Configuration</string>
+    <string name="title_of_configuration_screen">Title of Configuration Screen</string>
+    <string name="title_activity_gate_location">Gate Location</string>
 </resources>

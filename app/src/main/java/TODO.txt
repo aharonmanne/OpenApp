@@ -1,0 +1,4 @@
+Implement configuration activity
+Implement location watching and phone call
+How to beta-test from Google play?
+How to debug remotely (Google analytics?)

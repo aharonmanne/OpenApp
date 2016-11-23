@@ -2,24 +2,16 @@ package com.ksdagile.openapp;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 
-import com.ksdagile.openapp.R;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.Set;
 
 /**
  * Created by user on 13/09/2016.
@@ -27,7 +19,11 @@ import java.util.Set;
 
 public class GateSettings {
 
+    private static GateSettings Instance = null;
+
     public static final String PREFS_NAME = "OpenAppPrefs";
+    public static final Double MAX_LAT = 90.;
+    public static final Double MAX_LONG = 180.;
 
     private String SettingsJSON;
     private Activity parentActivity;
@@ -35,20 +31,31 @@ public class GateSettings {
     private double Latitude;
     private double Longitude;
     private boolean IsRunning;
+    private boolean IsSaved;
     private static String SettingsFile = "Settings.json";
     private static String PHONE_NAME = "phone";
     private static String LAT_NAME = "latitude";
     private static String LONG_NAME = "longitude";
     private static String IS_RUNNING = "is_running";
+    private static String IS_SAVED = "is_saved";
     private Context context;
+    private InputStream InputStream;
+    private OutputStream OutputStream;
 
-    public GateSettings(Context _context) {
+    public static synchronized GateSettings GetInstance(Context _context) {
+        if (Instance == null) {
+            Instance = new GateSettings(_context);
+        }
+        return Instance;
+    }
+
+    private GateSettings(Context _context) {
         String settingsJSON;
-        context  = _context;
+        context = _context;
         boolean isReadFail = false;
         try {
-            InputStream inputStream = context.openFileInput(SettingsFile);
-            JsonReader reader = new JsonReader(new InputStreamReader(inputStream, "UTF-8"));
+            InputStream = context.openFileInput(SettingsFile);
+            JsonReader reader = new JsonReader(new InputStreamReader(InputStream, "UTF-8"));
 
             reader.beginObject();
             while (reader.hasNext()) {
@@ -61,10 +68,13 @@ public class GateSettings {
                     Longitude = reader.nextDouble();
                 } else if (name.equals(IS_RUNNING)) {
                     IsRunning = reader.nextBoolean();
+                } else if (name.equals(IS_SAVED)) {
+                    IsSaved = reader.nextBoolean();
                 }
             }
             reader.endObject();
-            inputStream.close();
+            InputStream.close();
+            OutputStream = context.openFileOutput(SettingsFile, Context.MODE_PRIVATE);
         } catch (FileNotFoundException e) {
             Log.e("login activity", "File not found: " + e.toString());
             isReadFail = true;
@@ -74,29 +84,31 @@ public class GateSettings {
         }
         if (isReadFail) {
             Init();
-            Save();
         }
     }
 
     private void Init() {
         Phone = "";
-        Latitude = 0;
-        Longitude = 0;
+        Latitude = MAX_LAT + 1;
+        Longitude = MAX_LONG + 1;
         IsRunning = false;
+        IsSaved = false;
     }
 
     private void Save() {
         try {
-            OutputStream outputStream = context.openFileOutput(SettingsFile, Context.MODE_PRIVATE);
-            JsonWriter writer = new JsonWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+            IsSaved = true;
+            JsonWriter writer = new JsonWriter(new OutputStreamWriter(OutputStream, "UTF-8"));
             writer.setIndent("  ");
             writer.beginObject();
             writer.name(PHONE_NAME).value(Phone);
             writer.name(LAT_NAME).value(Latitude);
             writer.name(LONG_NAME).value(Longitude);
             writer.name(IS_RUNNING).value(IsRunning);
+            writer.name(IS_SAVED).value(IsSaved);
             writer.endObject();
             writer.close();
+
 
         } catch (Exception ex) {
             Log.d("Settings", ex.getLocalizedMessage());
@@ -143,4 +155,7 @@ public class GateSettings {
         Save();
     }
 
+    public boolean GetIsSaved() {
+        return IsSaved;
+    }
 }

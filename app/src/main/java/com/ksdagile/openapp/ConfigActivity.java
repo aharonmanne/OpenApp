@@ -1,6 +1,7 @@
 package com.ksdagile.openapp;
 
 import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import static android.R.attr.button;
 
 public class ConfigActivity extends AppCompatActivity {
 
+    private static final int PICK_GATE_LOCK = 1;
     GateSettings settings;
     EditText phoneNumber;
     Context context;
@@ -31,6 +33,12 @@ public class ConfigActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         context = this;
 
+        settings = GateSettings.GetInstance(this);
+        if (settings.GetIsSaved()) {
+            LeaveConfig();
+            return;
+        }
+
         // Get the App Widget ID from the Intent that launched the Activity
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
@@ -40,16 +48,14 @@ public class ConfigActivity extends AppCompatActivity {
                     AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
-        settings = new GateSettings(this);
-
         phoneNumber = (EditText) findViewById(R.id.editTextPhone);
         phoneNumber.setText(settings.GetPhone());
 
         Button button = (Button) findViewById(R.id.buttonLocateGate);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
-                if (phoneNumber.equals("")){
+                String phoneNum = phoneNumber.getText().toString();
+                if (phoneNum == null || phoneNum.isEmpty()) {
                     Toast.makeText(
                             context,
                             getResources().getText(R.string.phone_required).toString(),
@@ -64,20 +70,39 @@ public class ConfigActivity extends AppCompatActivity {
     }
 
     private void SavePhoneChooseGate() {
+        Intent pickGateLoc = new Intent(this, GateLocationActivity.class);
+        startActivityForResult(pickGateLoc, PICK_GATE_LOCK);
         // TODO: Save phone to settings, run gate location activity
+        LeaveConfig();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        if (requestCode == PICK_GATE_LOCK) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                LeaveConfig();
+            }
+        }
+    }
+
+    private void LeaveConfig() {
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-
-        //Update the App Widget with a RemoteViews layout by calling updateAppWidget(int, RemoteViews):
-        RemoteViews views = new RemoteViews(context.getPackageName(),
-                R.layout.widget_layout);
-        appWidgetManager.updateAppWidget(appWidgetId, views);
 
         //Create the return Intent, set it with the Activity result, and finish the Activity:
         Intent resultValue = new Intent();
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         setResult(RESULT_OK, resultValue);
 
+        AppWidgetManager man = AppWidgetManager.getInstance(context);
+        int[] ids = man.getAppWidgetIds(
+                new ComponentName(context, OpenAppWidgetProvider.class));
+        Intent updateIntent = new Intent();
+        updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        updateIntent.putExtra(OpenAppWidgetProvider.WIDGET_IDS_KEY, ids);
+        context.sendBroadcast(updateIntent);
         finish();
     }
 
