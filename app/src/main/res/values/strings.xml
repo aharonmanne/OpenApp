@@ -22,4 +22,7 @@
     <string name="configuration_prompt">OpenApp Configuration</string>
     <string name="title_of_configuration_screen">Title of Configuration Screen</string>
     <string name="title_activity_gate_location">Gate Location</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

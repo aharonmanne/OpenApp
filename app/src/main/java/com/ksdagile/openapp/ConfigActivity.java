@@ -1,5 +1,7 @@
 package com.ksdagile.openapp;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -39,6 +41,13 @@ public class ConfigActivity extends AppCompatActivity {
             return;
         }
 
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        Literal_Input literal_input = new Literal_Input();
+        fragmentTransaction.add(R.id.fragment_place, literal_input);
+        fragmentTransaction.commit();
+
+
         // Get the App Widget ID from the Intent that launched the Activity
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
@@ -48,13 +57,25 @@ public class ConfigActivity extends AppCompatActivity {
                     AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
-        phoneNumber = (EditText) findViewById(R.id.editTextPhone);
-        phoneNumber.setText(settings.GetPhone());
-
-        Button button = (Button) findViewById(R.id.buttonLocateGate);
+        Button button = (Button) findViewById(R.id.buttonSave);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                EditText phoneNumber = (EditText) findViewById(R.id.editTextPhone);
                 String phoneNum = phoneNumber.getText().toString();
+                // TODO: Check if showing phone or location fragment
+                FragmentManager fragmentManager = getFragmentManager();
+                if (fragmentManager.getBackStackEntryCount() == 0) {
+                    CheckSavePhone(phoneNum);
+
+                } else {
+
+                }
+
+            }
+
+            private void CheckSavePhone(String phoneNum) {
+                phoneNumber = (EditText) findViewById(R.id.editTextPhone);
+                phoneNumber.setText(settings.GetPhone());
                 if (phoneNum == null || phoneNum.isEmpty()) {
                     Toast.makeText(
                             context,
@@ -64,7 +85,6 @@ public class ConfigActivity extends AppCompatActivity {
                 } else {
                     SavePhoneChooseGate();
                 }
-
             }
         });
     }
