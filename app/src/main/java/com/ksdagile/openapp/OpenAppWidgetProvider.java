@@ -20,7 +20,7 @@ import android.widget.Toast;
 public class OpenAppWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_CLICK = "ACTION_CLICK";
 
-    public static final String WIDGET_IDS_KEY ="OA_WIDGET_IDS";
+    public static final String WIDGET_IDS_KEY = "OA_WIDGET_IDS";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -47,35 +47,39 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
                     R.layout.widget_layout);
             Bitmap bm = null;
-            boolean isRunning = settings.GetIsRunning();
-            if (isRunning) {
-                bm =  BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
-            } else {
-                bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.on_toggle);
-            }
-            if (!isToggled) {
+            boolean isSaved = settings.GetIsSaved();
+            if (isSaved) {
+
+                boolean isRunning = settings.GetIsRunning();
                 if (isRunning) {
-                    OpenAppService.startActionStop(context);
+                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
                 } else {
-                    OpenAppService.startActionStart(context);
+                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.on_toggle);
                 }
-                isToggled = true;
-                isRunning = !isRunning;
-                settings.SetIsRunning(isRunning);
+                if (!isToggled) {
+                    if (isRunning) {
+                        OpenAppService.startActionStop(context);
+                    } else {
+                        OpenAppService.startActionStart(context);
+                    }
+                    isToggled = true;
+                    isRunning = !isRunning;
+                    settings.SetIsRunning(isRunning);
+                }
+                remoteViews.setImageViewBitmap(R.id.toggle, bm);
+
+                //Toast.makeText(context,"Tapped OpenApp", Toast.LENGTH_LONG).show();
+                // Register an onClickListener
+                Intent intent = new Intent(context, OpenAppWidgetProvider.class);
+
+                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
+                        0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
+                appWidgetManager.updateAppWidget(widgetId, remoteViews);
             }
-            remoteViews.setImageViewBitmap(R.id.toggle, bm);
-
-            //Toast.makeText(context,"Tapped OpenApp", Toast.LENGTH_LONG).show();
-            // Register an onClickListener
-            Intent intent = new Intent(context, OpenAppWidgetProvider.class);
-
-            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
-                    0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-            remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
-            appWidgetManager.updateAppWidget(widgetId, remoteViews);
         }
     }
 }

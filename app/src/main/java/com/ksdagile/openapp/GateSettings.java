@@ -128,20 +128,20 @@ public class GateSettings {
         Save();
     }
 
-    public Double GetLongitude() {
+    public double GetLongitude() {
         return Longitude;
     }
 
-    public void SetLongitude(Float _longitude) {
+    public void SetLongitude(double _longitude) {
         Longitude = _longitude;
         Save();
     }
 
-    public Double GetLatitude() {
+    public double GetLatitude() {
         return Latitude;
     }
 
-    public void SetLatitude(Float _latitude) {
+    public void SetLatitude(double _latitude) {
         Latitude = _latitude;
         Save();
     }

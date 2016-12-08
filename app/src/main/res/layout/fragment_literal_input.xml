@@ -7,13 +7,13 @@
 
     <EditText
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="69dp"
         android:inputType="phone"
         android:ems="10"
-        android:layout_marginTop="54dp"
         android:id="@+id/editTextPhone"
         android:hint="@string/phone_hint"
-        android:layout_gravity="center_vertical|center_horizontal"
-        android:gravity="center"/>
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="100dp" />
 
 </FrameLayout>
