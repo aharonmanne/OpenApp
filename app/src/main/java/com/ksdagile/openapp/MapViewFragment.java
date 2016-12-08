@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -16,6 +17,7 @@ import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 
@@ -23,11 +25,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
  * A simple {@link Fragment} subclass.
  */
 
-public class MapViewFragment extends Fragment {
+public class MapViewFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerDragListener {
 
     MapView mapView;
     private GoogleMap googleMap;
     GateSettings settings;
+    ConfigActivity parentActivity;
 
     public MapViewFragment() {
         // Required empty public constructor
@@ -50,38 +53,12 @@ public class MapViewFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-        mapView.getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap mMap) {
-                googleMap = mMap;
-
-                try {
-                    googleMap.setMyLocationEnabled(true);
-                } catch (SecurityException ex) {
-                    Log.d("MapViewFragment", ex.getMessage());
-                }
-
-                // For dropping a marker at a point on the Map
-                double latitude = settings.GetLatitude();
-                double longitude = settings.GetLongitude();
-                if (latitude > GateSettings.MAX_LAT)
-                    latitude = 0;
-                if (longitude > GateSettings.MAX_LONG)
-                    longitude = 0;
-                LatLng gate = new LatLng(latitude, longitude);
-                googleMap.addMarker(new MarkerOptions().position(gate).title("Gate").snippet("Set Gate Location"));
-
-                // For zooming automatically to the location of the marker
-                CameraPosition cameraPosition = new CameraPosition.Builder().target(gate).zoom(12).build();
-                googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            }
-        });
-
+        mapView.getMapAsync(this);
 
         return rootView;
     }
+
+
     @Override
     public void onResume() {
         super.onResume();
@@ -104,5 +81,47 @@ public class MapViewFragment extends Fragment {
     public void onLowMemory() {
         super.onLowMemory();
         mapView.onLowMemory();
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        parentActivity = (ConfigActivity)getActivity();
+        parentActivity.latLng = new LatLng(marker.getPosition().latitude, marker.getPosition().longitude);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        googleMap = googleMap;
+
+        try {
+            googleMap.setMyLocationEnabled(true);
+        } catch (SecurityException ex) {
+            Log.d("MapViewFragment", ex.getMessage());
+        }
+
+        // For dropping a marker at a point on the Map
+        double latitude = settings.GetLatitude();
+        double longitude = settings.GetLongitude();
+        if (latitude > GateSettings.MAX_LAT)
+            latitude = 0;
+        if (longitude > GateSettings.MAX_LONG)
+            longitude = 0;
+        LatLng gate = new LatLng(latitude, longitude);
+        googleMap.addMarker(new MarkerOptions().position(gate).title("Gate").snippet("Set Gate Location").draggable(true));
+        googleMap.setOnMarkerDragListener(this);
+
+        // For zooming automatically to the location of the marker
+        CameraPosition cameraPosition = new CameraPosition.Builder().target(gate).zoom(12).build();
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 }
