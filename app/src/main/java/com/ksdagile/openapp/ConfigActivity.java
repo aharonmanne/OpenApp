@@ -138,11 +138,6 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 
-        //Create the return Intent, set it with the Activity result, and finish the Activity:
-        Intent resultValue = new Intent();
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        setResult(RESULT_OK, resultValue);
-
         AppWidgetManager man = AppWidgetManager.getInstance(context);
         int[] ids = man.getAppWidgetIds(
                 new ComponentName(context, OpenAppWidgetProvider.class));
@@ -150,6 +145,11 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         updateIntent.putExtra(OpenAppWidgetProvider.WIDGET_IDS_KEY, ids);
         context.sendBroadcast(updateIntent);
+
+        //Create the return Intent, set it with the Activity result, and finish the Activity:
+        Intent resultValue = new Intent();
+        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        setResult(RESULT_OK, resultValue);
         finish();
     }
 

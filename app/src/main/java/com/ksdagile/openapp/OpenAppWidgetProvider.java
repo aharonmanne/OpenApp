@@ -43,11 +43,11 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
 
         int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
         boolean isToggled = false;
+        boolean isSaved = settings.GetIsSaved();
         for (int widgetId : allWidgetIds) {
             RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
                     R.layout.widget_layout);
             Bitmap bm = null;
-            boolean isSaved = settings.GetIsSaved();
             if (isSaved) {
 
                 boolean isRunning = settings.GetIsRunning();
@@ -67,19 +67,19 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
                     settings.SetIsRunning(isRunning);
                 }
                 remoteViews.setImageViewBitmap(R.id.toggle, bm);
-
-                //Toast.makeText(context,"Tapped OpenApp", Toast.LENGTH_LONG).show();
-                // Register an onClickListener
-                Intent intent = new Intent(context, OpenAppWidgetProvider.class);
-
-                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
-                        0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
-                appWidgetManager.updateAppWidget(widgetId, remoteViews);
             }
+
+            //Toast.makeText(context,"Tapped OpenApp", Toast.LENGTH_LONG).show();
+            // Register an onClickListener
+            Intent intent = new Intent(context, OpenAppWidgetProvider.class);
+
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
+                    0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
+            appWidgetManager.updateAppWidget(widgetId, remoteViews);
         }
     }
 }

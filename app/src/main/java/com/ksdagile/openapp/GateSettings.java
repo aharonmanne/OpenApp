@@ -74,7 +74,6 @@ public class GateSettings {
             }
             reader.endObject();
             InputStream.close();
-            OutputStream = context.openFileOutput(SettingsFile, Context.MODE_PRIVATE);
         } catch (FileNotFoundException e) {
             Log.e("login activity", "File not found: " + e.toString());
             isReadFail = true;
@@ -97,6 +96,7 @@ public class GateSettings {
 
     private void Save() {
         try {
+            OutputStream = context.openFileOutput(SettingsFile, Context.MODE_PRIVATE);
             IsSaved = true;
             JsonWriter writer = new JsonWriter(new OutputStreamWriter(OutputStream, "UTF-8"));
             writer.setIndent("  ");
@@ -108,7 +108,7 @@ public class GateSettings {
             writer.name(IS_SAVED).value(IsSaved);
             writer.endObject();
             writer.close();
-
+            OutputStream.close();
 
         } catch (Exception ex) {
             Log.d("Settings", ex.getLocalizedMessage());

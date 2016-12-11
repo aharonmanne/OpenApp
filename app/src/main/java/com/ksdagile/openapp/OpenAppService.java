@@ -14,10 +14,6 @@ public class OpenAppService extends IntentService {
     private static final String ACTION_START = "com.ksdagile.openapp.action.START";
     private static final String ACTION_STOP = "com.ksdagile.openapp.action.STOP";
 
-    // TODO: Rename parameters
-    private static final String EXTRA_PARAM1 = "com.ksdagile.openapp.extra.PARAM1";
-    private static final String EXTRA_PARAM2 = "com.ksdagile.openapp.extra.PARAM2";
-
     public OpenAppService() {
         super("OpenAppService");
     }
