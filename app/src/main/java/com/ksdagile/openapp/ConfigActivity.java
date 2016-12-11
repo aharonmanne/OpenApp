@@ -74,7 +74,6 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         Button button = (Button) findViewById(R.id.buttonSave);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                // TODO: Check if showing phone or location fragment
                 FragmentManager fragmentManager = getFragmentManager();
                 if (fragmentManager.getBackStackEntryCount() == 0) {
                     CheckSavePhone();
@@ -86,9 +85,6 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             }
 
             private void SaveGateFinish() {
-                // TODO: get LatLng from MapViewFragment
-                // TODO: make marker draggable
-                // TODO: get LatLng after marker dragged
                 settings.SetLatitude(latLng.latitude);
                 settings.SetLongitude(latLng.longitude);
 
