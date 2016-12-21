@@ -17,9 +17,9 @@ import android.widget.Toast;
  * Created by user on 08/11/2016.
  */
 
+
 public class OpenAppWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_CLICK = "ACTION_CLICK";
-
     public static final String WIDGET_IDS_KEY = "OA_WIDGET_IDS";
 
     @Override
@@ -30,6 +30,8 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
         } else super.onReceive(context, intent);
     }
+
+    // TODO: don't toggle state if this is the first call to onUpdate after configuration
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager,

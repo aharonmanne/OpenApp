@@ -1,4 +1,5 @@
-Implement configuration activity
-Implement location watching and phone call
+Test multiple widgets
+Prevent switch off-> on after configuration
+Enter location edittext?
 How to beta-test from Google play?
 How to debug remotely (Google analytics?)

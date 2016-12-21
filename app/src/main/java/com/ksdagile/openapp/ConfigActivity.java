@@ -21,6 +21,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -29,6 +32,7 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 public class ConfigActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks
         , GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
@@ -38,21 +42,37 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     EditText phoneNumber;
     Context context;
     int appWidgetId;
-    LatLng latLng;
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
     MapFragment mapFragment;
+    Tracker configTracker;
+    FirebaseAnalytics firebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_config);
         context = this;
 
+        // Obtain the FirebaseAnalytics instance.
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        Bundle params = new Bundle();
+        params.putString("start_config", "StartConfig");
+        params.putString("full_text", "Started Configuration Activity");
+        firebaseAnalytics.logEvent("start_config", params);
+        // Just in case:
+        Intent resultValue = new Intent();
+        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        setResult(RESULT_OK, resultValue);
+
         settings = GateSettings.GetInstance(this);
         if (settings.GetIsSaved()) {
+            Log.d(Constants.TAG, "Settings already configured");
             LeaveConfig();
             return;
+        } else {
+            Log.d(Constants.TAG, "Starting new configuration");
         }
 
         FragmentManager fragmentManager = getFragmentManager();
@@ -82,13 +102,24 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                     SaveGateFinish();
                 }
 
+                Log.i(Constants.TAG, "Setting screen name: Config");
+                configTracker.setScreenName("Image~Config");
+                configTracker.send(new HitBuilders.ScreenViewBuilder().build());
             }
 
             private void SaveGateFinish() {
-                settings.SetLatitude(latLng.latitude);
-                settings.SetLongitude(latLng.longitude);
+                String saveError = "OK";
 
-                LeaveConfig();
+                if (settings.GetLatitude() > GateSettings.MAX_LAT ||
+                        settings.GetLongitude() > GateSettings.MAX_LONG)
+                    saveError = context.getResources().getString(R.string.no_location);
+                if (settings.GetPhone() == null)
+                    saveError = context.getResources().getString(R.string.no_phone);
+                if (saveError == "OK")
+                    LeaveConfig();
+                else {
+                    Toast.makeText(context, saveError, Toast.LENGTH_LONG).show();
+                }
             }
 
             private void CheckSavePhone() {
@@ -115,6 +146,12 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                     .addApi(LocationServices.API)
                     .build();
         }
+        if (configTracker == null) {
+            GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
+            // To enable debug logging use: adb shell setprop log.tag.GAv4 DEBUG
+            configTracker = analytics.newTracker("UA-33685516-1");
+
+        }
     }
 
     private void SavePhoneChooseGate(String phoneNum) {
@@ -127,8 +164,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             fragmentTransaction.commit();
             settings.SetPhone(phoneNum);
 
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             Log.d("ConfigActivity", ex.getMessage());
         }
     }

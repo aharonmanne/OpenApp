@@ -96,7 +96,8 @@ public class MapViewFragment extends Fragment implements OnMapReadyCallback, Goo
     @Override
     public void onMarkerDragEnd(Marker marker) {
         parentActivity = (ConfigActivity)getActivity();
-        parentActivity.latLng = new LatLng(marker.getPosition().latitude, marker.getPosition().longitude);
+        settings.SetLatitude(marker.getPosition().latitude);
+        settings.SetLongitude(marker.getPosition().longitude);
     }
 
     @Override
