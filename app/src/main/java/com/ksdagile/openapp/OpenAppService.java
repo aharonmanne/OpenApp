@@ -5,14 +5,12 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Result;
@@ -23,6 +21,8 @@ import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
 
@@ -39,16 +39,17 @@ public class OpenAppService extends IntentService implements ResultCallback,
     private static final String ACTION_START = "com.ksdagile.openapp.action.START";
     private static final String ACTION_STOP = "com.ksdagile.openapp.action.STOP";
     private static final String GATE_REQUEST_ID = "com.ksdagile.openap.id.GATE_REQUEST";
-    private static Context context;
-
 
     Geofence gateGeofence;
     private PendingIntent gateGeofencePendingIntent;
 
-    Tracker gateSvcTracker;
     private GoogleApiClient googleApiClient;
     private boolean isGoogleConnected;
-
+    Timer timer;
+    TimerTask timerTask;
+    //we are going to use a handler to be able to run in our TimerTask
+    final Handler handler = new Handler();
+    private OpenAppService thisService = this;
     public OpenAppService() {
         super("OpenAppService");
     }
@@ -59,8 +60,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
      *
      * @see IntentService
      */
-    public static void startActionStart(Context _context) {
-        context = _context;
+    public static void startActionStart(Context context) {
         Intent intent = new Intent(context, OpenAppService.class);
         intent.setAction(ACTION_START);
         context.startService(intent);
@@ -82,41 +82,19 @@ public class OpenAppService extends IntentService implements ResultCallback,
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (gateSvcTracker == null) {
-            GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
-            // To enable debug logging use: adb shell setprop log.tag.GAv4 DEBUG
-            gateSvcTracker = analytics.newTracker("UA-33685516-1");
-
-        }
-        gateSvcTracker.setScreenName("onHandleIntent");
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_START.equals(action)) {
                 handleActionStart();
-                gateSvcTracker.send(new HitBuilders.EventBuilder()
-                        .setCategory("Service Event")
-                        .setAction("ServiceStarted")
-                        .setLabel("OpenApp Service Started")
-                        .build());
                 Log.d(Constants.TAG, "OpenApp Service Started");
             } else if (ACTION_STOP.equals(action)) {
                 handleActionStop();
-                gateSvcTracker.send(new HitBuilders.EventBuilder()
-                        .setCategory("Service Event")
-                        .setAction("ServiceStopped")
-                        .setLabel("OpenApp Service Stopped")
-                        .build());
                 Log.d(Constants.TAG, "OpenApp Service Stopped");
             } else { // Handle Geofence events
                 GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
                 if (geofencingEvent.hasError()) {
                     String errorMessage =
                             String.format("GeofenceError %d", geofencingEvent.getErrorCode());
-                    gateSvcTracker.send(new HitBuilders.EventBuilder()
-                            .setCategory("Service Event")
-                            .setAction("GeofenceError")
-                            .setLabel(errorMessage)
-                            .build());
                     Log.e(Constants.TAG, errorMessage);
                     return;
                 }
@@ -133,24 +111,14 @@ public class OpenAppService extends IntentService implements ResultCallback,
 
                     // Start phone call
                     CallGatePhone();
-
-                    gateSvcTracker.send(new HitBuilders.EventBuilder()
-                            .setCategory("Service Event")
-                            .setAction("Entered Gate")
-                            .setLabel("OpenApp Called Gate")
-                            .build());
+                    Log.d(Constants.TAG, "Opened gate");
                     // Send notification and log the transition details.
                     //sendNotification(geofenceTransitionDetails);
                     // Log.i(TAG, geofenceTransitionDetails);
                 } else {
                     // Log the error.
-                    //Log.e(TAG, getResources().getString(R.string.geofence_transition_invalid_type) +": " + geofencingEvent.toString() );
-                    gateSvcTracker.send(new HitBuilders.EventBuilder()
-                            .setCategory("Unexpected Geofence Event")
-                            .setAction("Event Ignored")
-                            .setLabel(getResources().getString(R.string.geofence_transition_invalid_type) + ": " + geofencingEvent.toString())
-                            .build()
-                    );
+                    Log.e(Constants.TAG, getResources().getString(R.string.geofence_transition_invalid_type) +": " + geofencingEvent.toString() );
+
                 }
 
             }
@@ -158,8 +126,8 @@ public class OpenAppService extends IntentService implements ResultCallback,
     }
 
     private void CallGatePhone() {
-        GateSettings settings = GateSettings.GetInstance(context);
-        GateDialer dial = new GateDialer(settings, context);
+        GateSettings settings = GateSettings.GetInstance(this);
+        GateDialer dial = new GateDialer(settings, this);
         dial.dial();
     }
 
@@ -192,26 +160,43 @@ public class OpenAppService extends IntentService implements ResultCallback,
                     .build();
         }
         googleApiClient.connect();
-        try {
-            // TODO: move this to timer which can be stopped if service stopped
-            while (!isGoogleConnected) {
-                Toast.makeText(getApplicationContext(), getResources().getText(R.string.no_google_connection), Toast.LENGTH_SHORT).show();
-                Log.d(Constants.TAG, getResources().getText(R.string.no_google_connection).toString());
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+
+        //set a new Timer
+        timer = new Timer();
+        //initialize the TimerTask's job
+        initializeTimerTask();
+
+        //schedule the timer, after the first 5000ms the TimerTask will run every 10000ms
+        timer.schedule(timerTask, 500, 1000); //
+
+
+    }
+
+    private void initializeTimerTask() {
+        timerTask = new TimerTask() {
+            public void run() {
+                //use a handler to run a toast that shows the current timestamp
+                handler.post(new Runnable() {
+                    public void run() {
+                        try {
+                        if (isGoogleConnected) {
+                            LocationServices.GeofencingApi.addGeofences(
+                                    googleApiClient,
+                                    getGeofencingRequest(),
+                                    getGeofencePendingIntent()
+                            ).setResultCallback(thisService);
+                            Log.d(Constants.TAG, "Added Geofence");
+                            timerTask.cancel();
+                        } else {
+                            Log.d(Constants.TAG, "Waiting for google services connection");
+                        }
+                    } catch (SecurityException ex) {
+                        ex.printStackTrace();
+                    }
+                    }
+                });
             }
-            LocationServices.GeofencingApi.addGeofences(
-                    googleApiClient,
-                    getGeofencingRequest(),
-                    getGeofencePendingIntent()
-            ).setResultCallback(this);
-            Log.d(Constants.TAG, "Added Geofence");
-        } catch (SecurityException ex) {
-            ex.printStackTrace();
-        }
+        };
     }
 
     /**
@@ -230,6 +215,8 @@ public class OpenAppService extends IntentService implements ResultCallback,
                     // This is the same pending intent that was used in addGeofences().
                     getGeofencePendingIntent()
             ).setResultCallback(this); // Result processed in onResult().
+            if (timerTask != null)
+                timerTask.cancel();
         }
     }
     

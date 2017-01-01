@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,10 +30,11 @@ public class Literal_Input extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        Log.d(Constants.TAG, "Inflating Literal_Input");
         return inflater.inflate(R.layout.fragment_literal_input, container, false);
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
+    // TODO: Clean up button handling, not needed in this fragment
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
@@ -47,6 +49,17 @@ public class Literal_Input extends Fragment {
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        GateSettings settings = GateSettings.GetInstance(getActivity());
+        String phone = settings.GetPhone();
+        if (phone != "") {
+            EditText et = (EditText) getActivity().findViewById(R.id.editTextPhone);
+            et.setText(phone);
         }
     }
 
