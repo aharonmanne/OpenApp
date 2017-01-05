@@ -1,38 +1,43 @@
-package com.ksdagile.openapp;
+        package com.ksdagile.openapp;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.net.Uri;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+        import android.app.FragmentManager;
+        import android.app.FragmentTransaction;
+        import android.appwidget.AppWidgetManager;
+        import android.content.ComponentName;
+        import android.content.Context;
+        import android.content.Intent;
+        import android.content.pm.PackageManager;
+        import android.location.Location;
+        import android.net.Uri;
+        import android.os.Bundle;
+        import android.provider.SyncStateContract;
+        import android.support.annotation.NonNull;
+        import android.support.annotation.Nullable;
+        import android.support.v4.app.ActivityCompat;
+        import android.support.v4.app.FragmentActivity;
+        import android.support.v7.app.AppCompatActivity;
+        import android.support.v7.widget.Toolbar;
+        import android.util.Log;
+        import android.view.View;
+        import android.widget.Button;
+        import android.widget.EditText;
+        import android.widget.Toast;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+        import com.google.android.gms.analytics.GoogleAnalytics;
+        import com.google.android.gms.analytics.HitBuilders;
+        import com.google.android.gms.analytics.Tracker;
+        import com.google.android.gms.common.ConnectionResult;
+        import com.google.android.gms.common.api.GoogleApiClient;
+        import com.google.android.gms.location.LocationServices;
+        import com.google.android.gms.maps.GoogleMap;
+        import com.google.android.gms.maps.MapFragment;
+        import com.google.android.gms.maps.OnMapReadyCallback;
+        import com.google.android.gms.maps.model.LatLng;
+        import com.google.android.gms.maps.model.MarkerOptions;
+        import com.google.firebase.analytics.FirebaseAnalytics;
 
-
-public class ConfigActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
-         GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, Literal_Input.OnFragmentInteractionListener {
+public class ConfigActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks
+        , GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, View.OnClickListener, Literal_Input.OnFragmentInteractionListener {
 
     private static final int PICK_GATE_LOCK = 1;
     GateSettings settings;
@@ -42,8 +47,11 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
     MapFragment mapFragment;
-    //Tracker configTracker;
-    //FirebaseAnalytics firebaseAnalytics;
+
+    enum ACTIVITY_STATE {INIT_STATE, LITERAL_IN, LOCATION}
+
+    ;
+    static ACTIVITY_STATE state = ACTIVITY_STATE.INIT_STATE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,32 +60,12 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         setContentView(R.layout.activity_config);
         context = this;
 
-        // Obtain the FirebaseAnalytics instance.
-        //firebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        Bundle params = new Bundle();
-        params.putString("start_config", "StartConfig");
-        params.putString("full_text", "Started Configuration Activity");
-        //firebaseAnalytics.logEvent("start_config", params);
-        // Just in case:
-        Intent resultValue = new Intent();
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        setResult(RESULT_OK, resultValue);
-
         settings = GateSettings.GetInstance(this);
         if (settings.GetIsSaved()) {
             Log.d(Constants.TAG, "Settings already configured");
-            LeaveConfig();
-            return;
         } else {
             Log.d(Constants.TAG, "Starting new configuration");
         }
-
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        Literal_Input literal_input = new Literal_Input();
-        fragmentTransaction.add(R.id.fragment_place, literal_input);
-        fragmentTransaction.commit();
-
 
         // Get the App Widget ID from the Intent that launched the Activity
         Intent intent = getIntent();
@@ -88,52 +76,16 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                     AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
+        // Just in case:
+        Intent resultValue = new Intent();
+        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        setResult(RESULT_CANCELED, resultValue);
+        Log.d(Constants.TAG, "Set RESULT_CANCELED");
+
         Button button = (Button) findViewById(R.id.buttonSave);
-        button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                FragmentManager fragmentManager = getFragmentManager();
-                if (fragmentManager.getBackStackEntryCount() == 0) {
-                    CheckSavePhone();
+        button.setOnClickListener(this);
 
-                } else {
-                    SaveGateFinish();
-                }
-
-                Log.i(Constants.TAG, "Setting screen name: Config");
-                //configTracker.setScreenName("Image~Config");
-                //configTracker.send(new HitBuilders.ScreenViewBuilder().build());
-            }
-
-            private void SaveGateFinish() {
-                String saveError = "OK";
-
-                if (settings.GetLatitude() > GateSettings.MAX_LAT ||
-                        settings.GetLongitude() > GateSettings.MAX_LONG)
-                    saveError = context.getResources().getString(R.string.no_location);
-                if (settings.GetPhone() == null)
-                    saveError = context.getResources().getString(R.string.no_phone);
-                if (saveError == "OK")
-                    LeaveConfig();
-                else {
-                    Toast.makeText(context, saveError, Toast.LENGTH_LONG).show();
-                }
-            }
-
-            private void CheckSavePhone() {
-                EditText phoneNumber = (EditText) findViewById(R.id.editTextPhone);
-                String phoneNum = phoneNumber.getText().toString();
-
-                if (phoneNum == null || phoneNum.isEmpty()) {
-                    Toast.makeText(
-                            context,
-                            getResources().getText(R.string.phone_required).toString(),
-                            Toast.LENGTH_LONG
-                    ).show();
-                } else {
-                    SavePhoneChooseGate(phoneNum);
-                }
-            }
-        });
+        Log.d(Constants.TAG, "Set button handler");
 
         // Create an instance of GoogleAPIClient.
         if (googleApiClient == null) {
@@ -143,12 +95,66 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                     .addApi(LocationServices.API)
                     .build();
         }
-       // if (configTracker == null) {
-       //     GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
-       //     // To enable debug logging use: adb shell setprop log.tag.GAv4 DEBUG
-       //     configTracker = analytics.newTracker("UA-33685516-1");
-//
-       // }
+
+        FragmentManager fragmentManager = getFragmentManager();
+        if (state == ACTIVITY_STATE.INIT_STATE) {
+            state = ACTIVITY_STATE.LITERAL_IN;
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            Literal_Input literal_input = new Literal_Input();
+            fragmentTransaction.add(R.id.fragment_place, literal_input);
+            fragmentTransaction.commit();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (state == ACTIVITY_STATE.LOCATION) {
+            state = ACTIVITY_STATE.LITERAL_IN;
+        } else if (state == ACTIVITY_STATE.LITERAL_IN) {
+            state = ACTIVITY_STATE.INIT_STATE;
+        }
+    }
+
+    // button press handling
+    public void onClick(View v) {
+        FragmentManager fragmentManager = getFragmentManager();
+        if (state == ACTIVITY_STATE.LITERAL_IN) {
+            CheckSavePhone();
+        } else {
+            SaveGateFinish();
+        }
+    }
+
+    private void SaveGateFinish() {
+        String saveError = "OK";
+
+        if (settings.GetLatitude() > GateSettings.MAX_LAT ||
+                settings.GetLongitude() > GateSettings.MAX_LONG)
+            saveError = context.getResources().getString(R.string.no_location);
+        if (settings.GetPhone() == null)
+            saveError = context.getResources().getString(R.string.no_phone);
+        if (saveError == "OK")
+            LeaveConfig();
+        else {
+            Toast.makeText(context, saveError, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void CheckSavePhone() {
+        EditText phoneNumber = (EditText) findViewById(R.id.editTextPhone);
+        String phoneNum = phoneNumber.getText().toString();
+
+        if (phoneNum == null || phoneNum.isEmpty()) {
+            Toast.makeText(
+                    context,
+                    getResources().getText(R.string.phone_required).toString(),
+                    Toast.LENGTH_LONG
+            ).show();
+        } else {
+            state = ACTIVITY_STATE.LOCATION;
+            SavePhoneChooseGate(phoneNum);
+        }
     }
 
     private void SavePhoneChooseGate(String phoneNum) {
@@ -198,13 +204,16 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         super.onStop();
     }
 
-    // Fragment Interface
+    // fragment iterface
+
 
     @Override
     public void onFragmentInteraction(Uri uri) {
 
     }
-    // Google Map Interface
+
+
+    // Google API interface
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -219,7 +228,10 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         }
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 googleApiClient);
-        if (lastLocation != null) {
+        boolean isKeptLocation =
+                settings.GetLatitude() <= GateSettings.MAX_LAT &&
+                        settings.GetLongitude() <= GateSettings.MAX_LONG;
+        if (lastLocation != null & !isKeptLocation) {
             settings.SetLatitude(lastLocation.getLatitude());
             settings.SetLongitude(lastLocation.getLongitude());
         }
@@ -250,5 +262,4 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 .title(gateTitle));
 
     }
-
 }

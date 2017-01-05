@@ -1,26 +1,9 @@
 <resources>
     <string name="app_name">OpenApp</string>
-    <string name="on">On</string>
-    <string name="off">Off</string>
-    <string name="running_state">Running</string>
-    <string name="stopped_state">Stopped</string>
-    <string name="start">Start</string>
-    <string name="stop">Stop</string>
-    <string name="gate_num_prompt">Gate Telephone</string>
-    <string name="gate_location">Gate Location</string>
-    <string name="gate_phone_pref">GatePhone</string>
-    <string name="gate_longitude_pref">GateLongitude</string>
-    <string name="gate_latitude_pref">GateLatitude</string>
-    <string name="running">Running</string>
     <string name="save">Save</string>
-    <string name="clear">Clear</string>
-    <string name="must_set_lat_long">Gate location not set</string>
     <string name="title_activity_config">ConfigActivity</string>
     <string name="phone_hint">Enter Phone Number</string>
-    <string name="location_button">Gate Location</string>
     <string name="phone_required">Phone Number Required</string>
-    <string name="configuration_prompt">OpenApp Configuration</string>
-    <string name="title_of_configuration_screen">Title of Configuration Screen</string>
     <string name="title_activity_gate_location">Gate Location</string>
     <string name="geofence_transition_invalid_type">Invalid Geofence Transition</string>
     <string name="cannot_dial">Cannot Dial</string>
