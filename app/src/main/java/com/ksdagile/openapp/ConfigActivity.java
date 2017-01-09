@@ -1,45 +1,44 @@
-        package com.ksdagile.openapp;
+package com.ksdagile.openapp;
 
-        import android.app.FragmentManager;
-        import android.app.FragmentTransaction;
-        import android.appwidget.AppWidgetManager;
-        import android.content.ComponentName;
-        import android.content.Context;
-        import android.content.Intent;
-        import android.content.pm.PackageManager;
-        import android.location.Location;
-        import android.net.Uri;
-        import android.os.Bundle;
-        import android.provider.SyncStateContract;
-        import android.support.annotation.NonNull;
-        import android.support.annotation.Nullable;
-        import android.support.v4.app.ActivityCompat;
-        import android.support.v4.app.FragmentActivity;
-        import android.support.v7.app.AppCompatActivity;
-        import android.support.v7.widget.Toolbar;
-        import android.util.Log;
-        import android.view.View;
-        import android.widget.Button;
-        import android.widget.EditText;
-        import android.widget.Toast;
+import android.*;
+import android.Manifest;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.SyncStateContract;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
-        import com.google.android.gms.analytics.GoogleAnalytics;
-        import com.google.android.gms.analytics.HitBuilders;
-        import com.google.android.gms.analytics.Tracker;
-        import com.google.android.gms.common.ConnectionResult;
-        import com.google.android.gms.common.api.GoogleApiClient;
-        import com.google.android.gms.location.LocationServices;
-        import com.google.android.gms.maps.GoogleMap;
-        import com.google.android.gms.maps.MapFragment;
-        import com.google.android.gms.maps.OnMapReadyCallback;
-        import com.google.android.gms.maps.model.LatLng;
-        import com.google.android.gms.maps.model.MarkerOptions;
-        import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 public class ConfigActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks
         , GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, View.OnClickListener, Literal_Input.OnFragmentInteractionListener {
 
     private static final int PICK_GATE_LOCK = 1;
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    private static final int MY_PERMISSIONS_REQUEST_MAKE_CALL = 2;
     GateSettings settings;
     EditText phoneNumber;
     Context context;
@@ -216,26 +215,116 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     // Google API interface
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        lastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                googleApiClient);
-        boolean isKeptLocation =
-                settings.GetLatitude() <= GateSettings.MAX_LAT &&
-                        settings.GetLongitude() <= GateSettings.MAX_LONG;
-        if (lastLocation != null & !isKeptLocation) {
-            settings.SetLatitude(lastLocation.getLatitude());
-            settings.SetLongitude(lastLocation.getLongitude());
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                Log.d(Constants.TAG, "Need to show rationale?");
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+                // MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+
+                return;
+            }
+        } else {
+
+            lastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    googleApiClient);
+            boolean isKeptLocation =
+                    settings.GetLatitude() <= GateSettings.MAX_LAT &&
+                            settings.GetLongitude() <= GateSettings.MAX_LONG;
+            if (lastLocation != null & !isKeptLocation) {
+                settings.SetLatitude(lastLocation.getLatitude());
+                settings.SetLongitude(lastLocation.getLongitude());
+            }
+            CheckPhonePermission();
         }
 
+    }
+
+    private void CheckPhonePermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    android.Manifest.permission.CALL_PHONE)) {
+                Log.d(Constants.TAG, "Need to show rationale?");
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.CALL_PHONE},
+                        MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+
+                // MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    try {
+                        lastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                                googleApiClient);
+                        boolean isKeptLocation =
+                                settings.GetLatitude() <= GateSettings.MAX_LAT &&
+                                        settings.GetLongitude() <= GateSettings.MAX_LONG;
+                        if (lastLocation != null & !isKeptLocation) {
+                            settings.SetLatitude(lastLocation.getLatitude());
+                            settings.SetLongitude(lastLocation.getLongitude());
+                        }
+                    } catch (SecurityException secEx) {
+                        Log.d(Constants.TAG, "Security Exception: " + secEx.getMessage());
+                    }
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Log.d(Constants.TAG, "Permission denied");
+                }
+                CheckPhonePermission();
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_MAKE_CALL: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(Constants.TAG, "Phone Permission Granted");
+                } else {
+                    Log.d(Constants.TAG, "Phone Permission Denied");
+                }
+
+            }
+        }
     }
 
     @Override

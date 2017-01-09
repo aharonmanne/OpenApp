@@ -44,35 +44,29 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
         GateSettings settings = GateSettings.GetInstance(context);
 
         int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-        boolean isToggled = false;
         boolean isSaved = settings.GetIsSaved();
-        for (int widgetId : allWidgetIds) {
-            RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
-                    R.layout.widget_layout);
-            Bitmap bm = null;
-            if (isSaved) {
-
-                boolean isRunning = settings.GetIsRunning();
-                if (isRunning) {
-                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
-                } else {
-                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.on_toggle);
-                }
-                if (!isToggled) {
-                    if (isRunning) {
-                        OpenAppService.startActionStop(context);
-                    } else {
-                        OpenAppService.startActionStart(context);
-                    }
-                    isToggled = true;
-                    isRunning = !isRunning;
-                    settings.SetIsRunning(isRunning);
-                }
-                remoteViews.setImageViewBitmap(R.id.toggle, bm);
+        boolean isRunning = settings.GetIsRunning();
+        Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
+        if (isSaved) {
+            isRunning = !isRunning;
+            settings.SetIsRunning(isRunning);
+            if (isRunning) {
+                OpenAppService.startActionStart(context);
+            } else {
+                OpenAppService.startActionStop(context);
             }
+        }
+        if (isRunning)
+            bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.on_toggle);
+        else
+            bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
 
-            //Toast.makeText(context,"Tapped OpenApp", Toast.LENGTH_LONG).show();
-            // Register an onClickListener
+        RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
+                R.layout.widget_layout);
+        remoteViews.setImageViewBitmap(R.id.toggle, bm);
+
+        for (int widgetId : allWidgetIds) {
+
             Intent intent = new Intent(context, OpenAppWidgetProvider.class);
 
             intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -83,5 +77,5 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
             appWidgetManager.updateAppWidget(widgetId, remoteViews);
         }
-    }
+	}
 }
