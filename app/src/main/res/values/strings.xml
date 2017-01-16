@@ -10,4 +10,7 @@
     <string name="no_google_connection">Not connected to Google Services</string>
     <string name="no_phone">phone number not saved</string>
     <string name="no_location">Location not saved</string>
+    <string name="no_license">No Valid License</string>
+    <string name="starting">Starting OpenApp Service</string>
+    <string name="stopping">Stopping OpenApp Service</string>
 </resources>
