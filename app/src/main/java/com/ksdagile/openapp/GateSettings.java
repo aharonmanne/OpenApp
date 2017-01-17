@@ -32,12 +32,14 @@ public class GateSettings {
     private double Longitude;
     private boolean IsRunning;
     private boolean IsSaved;
+    private int LicenseStatus;
     private static String SettingsFile = "Settings.json";
     private static String PHONE_NAME = "phone";
     private static String LAT_NAME = "latitude";
     private static String LONG_NAME = "longitude";
     private static String IS_RUNNING = "is_running";
     private static String IS_SAVED = "is_saved";
+    private static String LICENSE_STATUS = "license_status";
     private Context context;
     private InputStream InputStream;
     private OutputStream OutputStream;
@@ -60,6 +62,7 @@ public class GateSettings {
             reader.beginObject();
             while (reader.hasNext()) {
                 String name = reader.nextName();
+                Log.d(Constants.TAG, "Read " + name);
                 if (name.equals(PHONE_NAME)) {
                     Phone = reader.nextString();
                 } else if (name.equals(LAT_NAME)) {
@@ -70,6 +73,8 @@ public class GateSettings {
                     IsRunning = reader.nextBoolean();
                 } else if (name.equals(IS_SAVED)) {
                     IsSaved = reader.nextBoolean();
+                } else if (name.equals(LICENSE_STATUS)) {
+                    LicenseStatus = Constants.LICENSE_NO_ANSWER;
                 }
             }
             reader.endObject();
@@ -92,6 +97,7 @@ public class GateSettings {
         Longitude = MAX_LONG + 1;
         IsRunning = false;
         IsSaved = false;
+        LicenseStatus = Constants.LICENSE_NO_ANSWER;
     }
 
     private void Save() {
@@ -106,6 +112,7 @@ public class GateSettings {
             writer.name(LONG_NAME).value(Longitude);
             writer.name(IS_RUNNING).value(IsRunning);
             writer.name(IS_SAVED).value(IsSaved);
+            writer.name(LICENSE_STATUS).value(LicenseStatus);
             writer.endObject();
             writer.close();
             OutputStream.close();
@@ -124,8 +131,10 @@ public class GateSettings {
     }
 
     public void SetPhone(String _phone) {
-        Phone = _phone;
-        Save();
+        if (_phone != Phone) {
+            Phone = _phone;
+            Save();
+        }
     }
 
     public double GetLongitude() {
@@ -133,8 +142,10 @@ public class GateSettings {
     }
 
     public void SetLongitude(double _longitude) {
-        Longitude = _longitude;
-        Save();
+        if (_longitude != Longitude){
+            Longitude = _longitude;
+            Save();
+        }
     }
 
     public double GetLatitude() {
@@ -142,8 +153,10 @@ public class GateSettings {
     }
 
     public void SetLatitude(double _latitude) {
-        Latitude = _latitude;
-        Save();
+        if (_latitude != Latitude) {
+            Latitude = _latitude;
+            Save();
+        }
     }
 
     public boolean GetIsRunning() {
@@ -151,11 +164,21 @@ public class GateSettings {
     }
 
     public void SetIsRunning(boolean _isRunning) {
-        IsRunning = _isRunning;
-        Save();
+        if (_isRunning != IsRunning) {
+            IsRunning = _isRunning;
+            Save();
+        }
     }
 
     public boolean GetIsSaved() {
         return IsSaved;
+    }
+
+    public int GetLicenseStatus() {return LicenseStatus;}
+    public void SetLicenseStatus(int _status) {
+        if (_status != LicenseStatus) {
+            LicenseStatus = _status;
+            Save();
+        }
     }
 }

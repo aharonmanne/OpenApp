@@ -61,10 +61,16 @@ public class OpenAppService extends IntentService implements ResultCallback,
      * @see IntentService
      */
     public static void startActionStart(Context context) {
-        Intent intent = new Intent(context, OpenAppService.class);
-        intent.setAction(ACTION_START);
-        context.startService(intent);
-        Toast.makeText(context, "Starting OpenApp Service", Toast.LENGTH_LONG).show();
+        GateSettings statSettings = GateSettings.GetInstance(context);
+        if (statSettings.GetLicenseStatus() == Constants.LICENSE_ALLOWED) {
+            Intent intent = new Intent(context, OpenAppService.class);
+            intent.setAction(ACTION_START);
+            context.startService(intent);
+            Toast.makeText(context, context.getResources().getText(R.string.starting), Toast.LENGTH_LONG).show();
+        }
+        else {
+            Toast.makeText(context, context.getResources().getText(R.string.no_license), Toast.LENGTH_LONG).show();
+        }
     }
 
     /**
@@ -76,7 +82,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
     public static void startActionStop(Context context) {
         Intent intent = new Intent(context, OpenAppService.class);
         intent.setAction(ACTION_STOP);
-        Toast.makeText(context, "Stopping OpenApp Service", Toast.LENGTH_LONG).show();
+        Toast.makeText(context, context.getResources().getText(R.string.stopping), Toast.LENGTH_LONG).show();
         context.startService(intent);
     }
 

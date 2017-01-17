@@ -12,6 +12,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.provider.Settings;
 import android.provider.SyncStateContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,6 +26,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -32,6 +37,11 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.vending.licensing.AESObfuscator;
+import com.google.android.vending.licensing.LicenseChecker;
+import com.google.android.vending.licensing.LicenseCheckerCallback;
+import com.google.android.vending.licensing.Policy;
+import com.google.android.vending.licensing.ServerManagedPolicy;
 
 public class ConfigActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks
         , GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, View.OnClickListener, Literal_Input.OnFragmentInteractionListener {
@@ -47,10 +57,29 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     private Location lastLocation;
     MapFragment mapFragment;
 
-    enum ACTIVITY_STATE {INIT_STATE, LITERAL_IN, LOCATION}
+    private LicenseCheckerCallback mLicenseCheckerCallback;
+    private LicenseChecker mChecker;
 
-    ;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Config Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    enum ACTIVITY_STATE {INIT_STATE, LITERAL_IN, LOCATION};
     static ACTIVITY_STATE state = ACTIVITY_STATE.INIT_STATE;
+    // A handler on the UI thread.
+    private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,12 +88,27 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         setContentView(R.layout.activity_config);
         context = this;
 
+        // Construct the LicenseCheckerCallback. The library calls this when done.
+        mLicenseCheckerCallback = new MyLicenseCheckerCallback();
+
+        String deviceId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+        // Construct the LicenseChecker with a Policy.
+        mChecker = new LicenseChecker(
+                this, new ServerManagedPolicy(this,
+                new AESObfuscator(Constants.SALT, getPackageName(), deviceId)),
+                Constants.BASE64_PUBLIC_KEY  // Your public licensing key.
+        );
+
+        mChecker.checkAccess(mLicenseCheckerCallback);
+
         settings = GateSettings.GetInstance(this);
         if (settings.GetIsSaved()) {
             Log.d(Constants.TAG, "Settings already configured");
         } else {
             Log.d(Constants.TAG, "Starting new configuration");
         }
+
+        mHandler = new Handler();
 
         // Get the App Widget ID from the Intent that launched the Activity
         Intent intent = getIntent();
@@ -88,11 +132,13 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
 
         // Create an instance of GoogleAPIClient.
         if (googleApiClient == null) {
+            // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
+            // See https://g.co/AppIndexing/AndroidStudio for more information.
             googleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
-                    .build();
+                    .addApi(AppIndex.API).build();
         }
 
         FragmentManager fragmentManager = getFragmentManager();
@@ -103,6 +149,12 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             fragmentTransaction.add(R.id.fragment_place, literal_input);
             fragmentTransaction.commit();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mChecker.onDestroy();
     }
 
     @Override
@@ -195,12 +247,17 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     protected void onStart() {
         googleApiClient.connect();
         super.onStart();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.start(googleApiClient, getIndexApiAction());
     }
 
     @Override
     protected void onStop() {
         googleApiClient.disconnect();
-        super.onStop();
+        super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
+                        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(googleApiClient, getIndexApiAction());
     }
 
     // fragment iterface
@@ -215,11 +272,11 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     // Google API interface
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
                 Log.d(Constants.TAG, "Need to show rationale?");
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
@@ -230,7 +287,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 // No explanation needed, we can request the permission.
 
                 ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
 
                 // MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION is an
@@ -260,7 +317,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 != PackageManager.PERMISSION_GRANTED) {
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    android.Manifest.permission.CALL_PHONE)) {
+                    Manifest.permission.CALL_PHONE)) {
                 Log.d(Constants.TAG, "Need to show rationale?");
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
@@ -271,7 +328,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 // No explanation needed, we can request the permission.
 
                 ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.CALL_PHONE},
+                        new String[]{Manifest.permission.CALL_PHONE},
                         MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
 
                 // MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION is an
@@ -351,4 +408,69 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 .title(gateTitle));
 
     }
+
+    // Licensing support
+    private void displayResult(final String result) {
+        mHandler.post(new Runnable() {
+            public void run() {
+                //mStatusText.setText(result);
+                //setProgressBarIndeterminateVisibility(false);
+                //mCheckLicenseButton.setEnabled(true);
+            }
+        });
+    }
+
+    private void displayDialog(final boolean showRetry) {
+        mHandler.post(new Runnable() {
+            public void run() {
+                //setProgressBarIndeterminateVisibility(false);
+                //showDialog(showRetry ? 1 : 0);
+                //mCheckLicenseButton.setEnabled(true);
+            }
+        });
+    }
+    private class MyLicenseCheckerCallback implements LicenseCheckerCallback {
+        public void allow(int policyReason) {
+            settings.SetLatitude(Constants.LICENSE_ALLOWED);
+            if (isFinishing()) {
+                // Don't update UI if Activity is finishing.
+                return;
+            }
+            // Should allow user access.
+            //displayResult(getString(R.string.allow));
+        }
+
+        public void dontAllow(int policyReason) {
+            settings.SetLatitude(Constants.LICENSE_REJECTED);
+            if (isFinishing()) {
+                // Don't update UI if Activity is finishing.
+                return;
+            }
+            //displayResult(getString(R.string.dont_allow));
+            // Should not allow access. In most cases, the app should assume
+            // the user has access unless it encounters this. If it does,
+            // the app should inform the user of their unlicensed ways
+            // and then either shut down the app or limit the user to a
+            // restricted set of features.
+            // In this example, we show a dialog that takes the user to Market.
+            // If the reason for the lack of license is that the service is
+            // unavailable or there is another problem, we display a
+            // retry button on the dialog and a different message.
+            displayDialog(policyReason == Policy.RETRY);
+        }
+
+        public void applicationError(int errorCode) {
+            if (isFinishing()) {
+                // Don't update UI if Activity is finishing.
+                return;
+            }
+            // This is a polite way of saying the developer made a mistake
+            // while setting up or calling the license checker library.
+            // Please examine the error code and fix the error.
+            //String result = String.format(getString(R.string.application_error), errorCode);
+            //displayResult(result);
+        }
+    }
+
+
 }
