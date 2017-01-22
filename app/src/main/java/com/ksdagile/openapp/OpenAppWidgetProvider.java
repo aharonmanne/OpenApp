@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -31,6 +32,13 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
         } else super.onReceive(context, intent);
     }
 
+    @Override
+    public void  onAppWidgetOptionsChanged (Context context,
+                                                AppWidgetManager appWidgetManager,
+                                                int appWidgetId,
+                                                Bundle newOptions) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+    }
     // TODO: don't toggle state if this is the first call to onUpdate after configuration
 
     @Override
@@ -44,10 +52,10 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
         GateSettings settings = GateSettings.GetInstance(context);
 
         int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-        boolean isSaved = settings.GetIsSaved();
         boolean isRunning = settings.GetIsRunning();
+        boolean isNewWidget = settings.GetIsNewWidget();
         Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
-        if (isSaved) {
+        if (false == isNewWidget) {
             isRunning = !isRunning;
             settings.SetIsRunning(isRunning);
             if (isRunning) {
@@ -55,7 +63,10 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             } else {
                 OpenAppService.startActionStop(context);
             }
+        } else {
+            settings.SetIsNewWidget(false);
         }
+
         if (isRunning)
             bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.on_toggle);
         else

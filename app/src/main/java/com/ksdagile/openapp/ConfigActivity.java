@@ -107,6 +107,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         } else {
             Log.d(Constants.TAG, "Starting new configuration");
         }
+        settings.SetIsNewWidget(true);
 
         mHandler = new Handler();
 
@@ -139,15 +140,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .addApi(AppIndex.API).build();
-        }
-
-        FragmentManager fragmentManager = getFragmentManager();
-        if (state == ACTIVITY_STATE.INIT_STATE) {
-            state = ACTIVITY_STATE.LITERAL_IN;
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            Literal_Input literal_input = new Literal_Input();
-            fragmentTransaction.add(R.id.fragment_place, literal_input);
-            fragmentTransaction.commit();
+            googleApiClient.connect();
         }
     }
 
@@ -245,11 +238,23 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
 
     @Override
     protected void onStart() {
-        googleApiClient.connect();
+        if (settings.GetLicenseStatus() != Constants.LICENSE_ALLOWED) {
+            googleApiClient.connect();
+        }
         super.onStart();
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.start(googleApiClient, getIndexApiAction());
+
+        // Add Gate Phone input fragment
+        FragmentManager fragmentManager = getFragmentManager();
+        if (state == ACTIVITY_STATE.INIT_STATE) {
+            state = ACTIVITY_STATE.LITERAL_IN;
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            Literal_Input literal_input = new Literal_Input();
+            fragmentTransaction.add(R.id.fragment_place, literal_input);
+            fragmentTransaction.commit();
+        }
     }
 
     @Override
@@ -258,6 +263,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
                         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(googleApiClient, getIndexApiAction());
+        state = ACTIVITY_STATE.INIT_STATE;
     }
 
     // fragment iterface
@@ -431,7 +437,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     }
     private class MyLicenseCheckerCallback implements LicenseCheckerCallback {
         public void allow(int policyReason) {
-            settings.SetLatitude(Constants.LICENSE_ALLOWED);
+            settings.SetLicenseStatus(Constants.LICENSE_ALLOWED);
             if (isFinishing()) {
                 // Don't update UI if Activity is finishing.
                 return;
@@ -441,7 +447,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         }
 
         public void dontAllow(int policyReason) {
-            settings.SetLatitude(Constants.LICENSE_REJECTED);
+            settings.SetLicenseStatus(Constants.LICENSE_REJECTED);
             if (isFinishing()) {
                 // Don't update UI if Activity is finishing.
                 return;

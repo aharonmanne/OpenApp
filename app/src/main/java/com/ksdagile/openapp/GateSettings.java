@@ -33,6 +33,7 @@ public class GateSettings {
     private boolean IsRunning;
     private boolean IsSaved;
     private int LicenseStatus;
+    private boolean IsNewWidget;
     private static String SettingsFile = "Settings.json";
     private static String PHONE_NAME = "phone";
     private static String LAT_NAME = "latitude";
@@ -40,6 +41,7 @@ public class GateSettings {
     private static String IS_RUNNING = "is_running";
     private static String IS_SAVED = "is_saved";
     private static String LICENSE_STATUS = "license_status";
+    private static String NEW_WIDGET = "new_widget";
     private Context context;
     private InputStream InputStream;
     private OutputStream OutputStream;
@@ -74,17 +76,22 @@ public class GateSettings {
                 } else if (name.equals(IS_SAVED)) {
                     IsSaved = reader.nextBoolean();
                 } else if (name.equals(LICENSE_STATUS)) {
-                    LicenseStatus = Constants.LICENSE_NO_ANSWER;
+                    LicenseStatus = reader.nextInt();
+                } else if (name.equals(NEW_WIDGET)) {
+                    IsNewWidget = reader.nextBoolean();
                 }
             }
             reader.endObject();
             InputStream.close();
         } catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
+            Log.e(Constants.TAG, "File not found: " + e.toString());
             isReadFail = true;
         } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
+            Log.e(Constants.TAG, "Can not read file: " + e.toString());
             isReadFail = true;
+        } catch (Exception ex) {
+            Log.e(Constants.TAG, ex.getMessage());
+            throw ex;
         }
         if (isReadFail) {
             Init();
@@ -98,6 +105,7 @@ public class GateSettings {
         IsRunning = false;
         IsSaved = false;
         LicenseStatus = Constants.LICENSE_NO_ANSWER;
+        IsNewWidget = true;
     }
 
     private void Save() {
@@ -113,6 +121,7 @@ public class GateSettings {
             writer.name(IS_RUNNING).value(IsRunning);
             writer.name(IS_SAVED).value(IsSaved);
             writer.name(LICENSE_STATUS).value(LicenseStatus);
+            writer.name(NEW_WIDGET).value(IsNewWidget);
             writer.endObject();
             writer.close();
             OutputStream.close();
@@ -178,6 +187,14 @@ public class GateSettings {
     public void SetLicenseStatus(int _status) {
         if (_status != LicenseStatus) {
             LicenseStatus = _status;
+            Save();
+        }
+    }
+
+    public boolean GetIsNewWidget() {return IsNewWidget;}
+    public void SetIsNewWidget(boolean _isNewWidget) {
+        if (_isNewWidget != IsNewWidget) {
+            IsNewWidget = _isNewWidget;
             Save();
         }
     }
