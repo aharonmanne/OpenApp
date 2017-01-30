@@ -5,10 +5,9 @@
     tools:context="com.ksdagile.openapp.Literal_Input">
 
 
-    <EditText
+    <AutoCompleteTextView
         android:layout_width="wrap_content"
         android:layout_height="69dp"
-        android:inputType="phone"
         android:ems="10"
         android:id="@+id/editTextPhone"
         android:hint="@string/phone_hint"

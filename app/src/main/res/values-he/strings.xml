@@ -4,7 +4,7 @@
     <string name="off">מופסק</string>
     <string name="running_state">רץ</string>
     <string name="stopped_state">מופסק</string>
-    <string name="start">הפעל</string>
+    <string name="start">הפעלה</string>
     <string name="stop">הפסק</string>
     <string name="gate_num_prompt">טלפון בשער</string>
     <string name="gate_location">מיקום שער</string>
@@ -12,11 +12,11 @@
     <string name="gate_longitude_pref">קו אורך שער</string>
     <string name="gate_latitude_pref">קו רוחב שער</string>
     <string name="running">בריצה</string>
-    <string name="save">שמור</string>
+    <string name="save">שמירה</string>
     <string name="clear">נקה\י</string>
     <string name="must_set_lat_long">מיקום שער לא הוגדר</string>
     <string name="title_activity_config">קונפיגורציה</string>
-    <string name="phone_hint">הקלד\י מספר טלפון</string>
+    <string name="phone_hint">הקלד\\י מספר טלפון או שם</string>
     <string name="location_button">מיקום שער</string>
     <string name="phone_required">מספר טלפון חובה</string>
     <string name="configuration_prompt">OpenApp קונפיקורציה של</string>

@@ -49,6 +49,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     private static final int PICK_GATE_LOCK = 1;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private static final int MY_PERMISSIONS_REQUEST_MAKE_CALL = 2;
+    private static final int MY_PERMISSIONS_READ_CONTACTS = 3;
     GateSettings settings;
     EditText phoneNumber;
     Context context;
@@ -245,6 +246,27 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.start(googleApiClient, getIndexApiAction());
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.READ_CONTACTS)) {
+            Log.d(Constants.TAG, "Need to show rationale?");
+            // Show an explanation to the user *asynchronously* -- don't block
+            // this thread waiting for the user's response! After the user
+            // sees the explanation, try again to request the permission.
+
+        } else {
+
+            // No explanation needed, we can request the permission.
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    MY_PERMISSIONS_READ_CONTACTS);
+
+            // MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION is an
+            // app-defined int constant. The callback method gets the
+            // result of the request.
+
+            return;
+        }
 
         // Add Gate Phone input fragment
         FragmentManager fragmentManager = getFragmentManager();
@@ -386,6 +408,17 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                     Log.d(Constants.TAG, "Phone Permission Denied");
                 }
 
+            }
+            case MY_PERMISSIONS_READ_CONTACTS: {
+                // Add Gate Phone input fragment
+                FragmentManager fragmentManager = getFragmentManager();
+                if (state == ACTIVITY_STATE.INIT_STATE) {
+                    state = ACTIVITY_STATE.LITERAL_IN;
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    Literal_Input literal_input = new Literal_Input();
+                    fragmentTransaction.add(R.id.fragment_place, literal_input);
+                    fragmentTransaction.commit();
+                }
             }
         }
     }
