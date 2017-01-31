@@ -6,13 +6,17 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.provider.SyncStateContract;
 import android.support.annotation.NonNull;
@@ -43,6 +47,11 @@ import com.google.android.vending.licensing.LicenseCheckerCallback;
 import com.google.android.vending.licensing.Policy;
 import com.google.android.vending.licensing.ServerManagedPolicy;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class ConfigActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks
         , GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, View.OnClickListener, Literal_Input.OnFragmentInteractionListener {
 
@@ -60,6 +69,8 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
 
     private LicenseCheckerCallback mLicenseCheckerCallback;
     private LicenseChecker mChecker;
+
+    Map<String, String> contactNameID;
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -88,6 +99,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
 
         setContentView(R.layout.activity_config);
         context = this;
+        contactNameID = new HashMap<String, String>();
 
         // Construct the LicenseCheckerCallback. The library calls this when done.
         mLicenseCheckerCallback = new MyLicenseCheckerCallback();
@@ -197,9 +209,42 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                     Toast.LENGTH_LONG
             ).show();
         } else {
+            String re = "[\\d]*"; // numbers only
+            Pattern p = Pattern.compile(re);
+            Matcher m = p.matcher(phoneNum);
+            if (!m.matches()) {
+                phoneNum = GetPhoneFromName(contactNameID.get(phoneNum));
+            }
             state = ACTIVITY_STATE.LOCATION;
             SavePhoneChooseGate(phoneNum);
         }
+    }
+
+    private String GetPhoneFromName(String id) {
+        String phoneNum = "";
+        ContentResolver cr = getContentResolver();
+        Uri contactData = ContactsContract.Data.CONTENT_URI;
+        Cursor cursor = cr.query(contactData, null, null, null, null);
+
+        try {
+            cursor.moveToFirst();
+            if (Integer.parseInt(cursor.getString(
+                    cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                Cursor pCur =
+                        cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone._ID + " = " + id, null, null);
+                while (pCur.moveToNext()) {
+                    //String number = pCur.getString(pCur.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    phoneNum = pCur.getString(pCur.getColumnIndex("data1"));
+                    break; // ? we want only 1 value
+                }
+                pCur.close();
+            }
+        } catch (SQLiteException ex) {
+            Log.d(Constants.TAG, ex.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return phoneNum;
     }
 
     private void SavePhoneChooseGate(String phoneNum) {

@@ -12,6 +12,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -30,7 +32,6 @@ import java.util.Map;
 public class Literal_Input extends Fragment {
 
     private OnFragmentInteractionListener mListener;
-    Map<String, String> contactDataMap = new HashMap<String, String>();
 
     public Literal_Input() {
         // Required empty public constructor
@@ -50,41 +51,29 @@ public class Literal_Input extends Fragment {
         ArrayAdapter<String> contactArrayAdapter =
                 new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, getContacts());
         phoneNumber.setAdapter(contactArrayAdapter);
+        phoneNumber.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                AutoCompleteTextView phoneNumber = (AutoCompleteTextView) getActivity().findViewById(R.id.editTextPhone);
+                imm.hideSoftInputFromWindow(phoneNumber.getWindowToken(), 0);
+            }
+        });
 
         return v;
     }
 
     ArrayList<String> getContacts() {
-
+        Map<String, String> namesIDs = ((ConfigActivity) getActivity()).contactNameID;
         try {
             ContentResolver cr = getActivity().getContentResolver();
-
             Uri contactData = ContactsContract.Data.CONTENT_URI;
             Cursor cursor = cr.query(contactData, null, null, null, null);
             while (cursor.moveToNext()) {
 
                 String name = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME));
                 String id = cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
-
-
-                if (Integer.parseInt(cursor.getString(
-                        cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                    Cursor pCur = cr.query(
-                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            new String[]{id},
-                            null);
-
-                    while (pCur.moveToNext()) {
-                        //String number = pCur.getString(pCur.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        String number = pCur.getString(pCur.getColumnIndex("data1"));
-                        contactDataMap.put((name != null) ? name : "", (number != null)? number: "");
-
-                        break; // ? we want only 1 value
-                    }
-                    pCur.close();
-                }
+                namesIDs.put(name, id);
             }
             cursor.close();
         } catch (SQLiteException ex) {
@@ -93,7 +82,7 @@ public class Literal_Input extends Fragment {
             Log.d(Constants.TAG, ex.toString());
         }
         ArrayList<String> contacts = new ArrayList<>();
-        contacts.addAll(contactDataMap.keySet());
+        contacts.addAll(namesIDs.keySet());
         return contacts;
     }
 
