@@ -64,7 +64,7 @@ public class GateSettings {
             reader.beginObject();
             while (reader.hasNext()) {
                 String name = reader.nextName();
-                Log.d(Constants.TAG, "Read " + name);
+                Logger.GetInstance(context).LogInfo("Read " + name);
                 if (name.equals(PHONE_NAME)) {
                     Phone = reader.nextString();
                 } else if (name.equals(LAT_NAME)) {
@@ -84,13 +84,13 @@ public class GateSettings {
             reader.endObject();
             InputStream.close();
         } catch (FileNotFoundException e) {
-            Log.e(Constants.TAG, "File not found: " + e.toString());
+            Logger.GetInstance(context).LogError("File not found: " + e.toString());
             isReadFail = true;
         } catch (IOException e) {
-            Log.e(Constants.TAG, "Can not read file: " + e.toString());
+            Logger.GetInstance(context).LogError("Can not read file: " + e.toString());
             isReadFail = true;
         } catch (Exception ex) {
-            Log.e(Constants.TAG, ex.getMessage());
+            Logger.GetInstance(context).LogError(ex.getMessage());
             throw ex;
         }
         if (isReadFail) {
@@ -127,7 +127,7 @@ public class GateSettings {
             OutputStream.close();
 
         } catch (Exception ex) {
-            Log.d("Settings", ex.getLocalizedMessage());
+            Logger.GetInstance(context).LogInfo(ex.getLocalizedMessage());
         }
 
     }

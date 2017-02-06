@@ -30,4 +30,5 @@
     <string name="no_license">No License</string>
     <string name="starting">Starting OpenApp Service</string>
     <string name="stopping">Stopping Service</string>
+    <string name="displayManageSubject">Debug Message</string>
 </resources>

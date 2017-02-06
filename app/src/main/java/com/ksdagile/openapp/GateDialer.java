@@ -35,7 +35,7 @@ public class GateDialer {
         if (getCallState() != TelephonyManager.CALL_STATE_IDLE) {
             Resources res = context.getResources();
             String cannotDialString = res.getString(R.string.cannot_dial);
-            Log.d(Constants.TAG, cannotDialString);
+            Logger.GetInstance(context).LogInfo(cannotDialString);
             return;
         }
         Uri number = Uri.parse("tel:" + settings.GetPhone());
@@ -43,7 +43,7 @@ public class GateDialer {
         callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CALL_PHONE)
                 != PackageManager.PERMISSION_GRANTED) {
-            Log.d(Constants.TAG, "No phone call permission");
+            Logger.GetInstance(context).LogInfo("No phone call permission");
         } else {
             MakeCall(callIntent);
         }
@@ -51,22 +51,22 @@ public class GateDialer {
     }
 
     private void MakeCall(Intent callIntent) {
-        Log.d(Constants.TAG, "Starting call activity");
+        Logger.GetInstance(context).LogInfo( "Starting call activity");
         context.startActivity(callIntent);
-        Log.d(Constants.TAG, "Call intent sent");
+        Logger.GetInstance(context).LogInfo( "Call intent sent");
         try {
             while (getCallState() == TelephonyManager.CALL_STATE_IDLE) {
                 Thread.sleep(1000);
                 // poll every second
             } // started call
-            Log.d(Constants.TAG, "Call Started");
+            Logger.GetInstance(context).LogInfo( "Call Started");
             while (getCallState() != TelephonyManager.CALL_STATE_IDLE) {
                 Thread.sleep(1000);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            Log.d(TAG, "Call Completed");
+            Logger.GetInstance(context).LogInfo("Call Completed");
         }
     }
 

@@ -111,14 +111,17 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 new AESObfuscator(Constants.SALT, getPackageName(), deviceId)),
                 Constants.BASE64_PUBLIC_KEY  // Your public licensing key.
         );
+        Thread.setDefaultUncaughtExceptionHandler(
+                new DefaultExceptionHandler(this));
 
         mChecker.checkAccess(mLicenseCheckerCallback);
 
         settings = GateSettings.GetInstance(this);
+        Logger logger = Logger.GetInstance(this);
         if (settings.GetIsSaved()) {
-            Log.d(Constants.TAG, "Settings already configured");
+            logger.LogInfo("Settings already configured");
         } else {
-            Log.d(Constants.TAG, "Starting new configuration");
+            logger.LogInfo("Starting new configuration");
         }
         settings.SetIsNewWidget(true);
 
@@ -137,12 +140,12 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         Intent resultValue = new Intent();
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         setResult(RESULT_CANCELED, resultValue);
-        Log.d(Constants.TAG, "Set RESULT_CANCELED");
+        logger.LogInfo("Set RESULT_CANCELED");
 
         Button button = (Button) findViewById(R.id.buttonSave);
         button.setOnClickListener(this);
 
-        Log.d(Constants.TAG, "Set button handler");
+        logger.LogInfo("Set button handler");
 
         // Create an instance of GoogleAPIClient.
         if (googleApiClient == null) {
@@ -240,9 +243,10 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 pCur.close();
             }
         } catch (SQLiteException ex) {
-            Log.d(Constants.TAG, ex.toString());
+            Logger.GetInstance(context).LogError(ex.toString());
         } catch (Exception e) {
             e.printStackTrace();
+            Logger.GetInstance(context).LogError(e.toString());
         }
         return phoneNum;
     }
@@ -258,7 +262,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             settings.SetPhone(phoneNum);
 
         } catch (Exception ex) {
-            Log.d("ConfigActivity", ex.getMessage());
+            Logger.GetInstance(context).LogError(ex.getMessage());
         }
     }
 
@@ -293,7 +297,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         AppIndex.AppIndexApi.start(googleApiClient, getIndexApiAction());
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.READ_CONTACTS)) {
-            Log.d(Constants.TAG, "Need to show rationale?");
+            Logger.GetInstance(context).LogInfo("Need to show rationale?");
             // Show an explanation to the user *asynchronously* -- don't block
             // this thread waiting for the user's response! After the user
             // sees the explanation, try again to request the permission.
@@ -350,7 +354,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
-                Log.d(Constants.TAG, "Need to show rationale?");
+                Logger.GetInstance(context).LogInfo("Need to show rationale?");
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
@@ -391,7 +395,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.CALL_PHONE)) {
-                Log.d(Constants.TAG, "Need to show rationale?");
+                Logger.GetInstance(context).LogInfo("Need to show rationale?");
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
@@ -433,14 +437,14 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                             settings.SetLongitude(lastLocation.getLongitude());
                         }
                     } catch (SecurityException secEx) {
-                        Log.d(Constants.TAG, "Security Exception: " + secEx.getMessage());
+                        Logger.GetInstance(context).LogInfo("Security Exception: " + secEx.getMessage());
                     }
 
                 } else {
 
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
-                    Log.d(Constants.TAG, "Permission denied");
+                    Logger.GetInstance(context).LogInfo("Permission denied");
                 }
                 CheckPhonePermission();
                 return;
@@ -448,9 +452,9 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             case MY_PERMISSIONS_REQUEST_MAKE_CALL: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(Constants.TAG, "Phone Permission Granted");
+                    Logger.GetInstance(context).LogInfo("Phone Permission Granted");
                 } else {
-                    Log.d(Constants.TAG, "Phone Permission Denied");
+                    Logger.GetInstance(context).LogInfo("Phone Permission Denied");
                 }
 
             }

@@ -32,6 +32,7 @@ import java.util.Map;
 public class Literal_Input extends Fragment {
 
     private OnFragmentInteractionListener mListener;
+    Context context;
 
     public Literal_Input() {
         // Required empty public constructor
@@ -42,6 +43,7 @@ public class Literal_Input extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        context = getActivity();
         View v = inflater.inflate(R.layout.fragment_literal_input, container, false);
 
         AutoCompleteTextView phoneNumber = (AutoCompleteTextView) v.findViewById(R.id.editTextPhone);
@@ -77,9 +79,9 @@ public class Literal_Input extends Fragment {
             }
             cursor.close();
         } catch (SQLiteException ex) {
-            Log.d(Constants.TAG, ex.toString());
+            Logger.GetInstance(context).LogInfo(ex.toString());
         } catch (Exception ex) {
-            Log.d(Constants.TAG, ex.toString());
+            Logger.GetInstance(context).LogInfo(ex.toString());
         }
         ArrayList<String> contacts = new ArrayList<>();
         contacts.addAll(namesIDs.keySet());

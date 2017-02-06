@@ -53,6 +53,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
     public OpenAppService() {
         super("OpenAppService");
     }
+    Context context;
 
     /**
      * Starts this service to perform action START with the given parameters. If
@@ -89,19 +90,20 @@ public class OpenAppService extends IntentService implements ResultCallback,
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
+            context = this;
             final String action = intent.getAction();
             if (ACTION_START.equals(action)) {
                 handleActionStart();
-                Log.d(Constants.TAG, "OpenApp Service Started");
+                Logger.GetInstance(this).LogInfo("OpenApp Service Started");
             } else if (ACTION_STOP.equals(action)) {
                 handleActionStop();
-                Log.d(Constants.TAG, "OpenApp Service Stopped");
+                Logger.GetInstance(this).LogInfo("OpenApp Service Stopped");
             } else { // Handle Geofence events
                 GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
                 if (geofencingEvent.hasError()) {
                     String errorMessage =
                             String.format("GeofenceError %d", geofencingEvent.getErrorCode());
-                    Log.e(Constants.TAG, errorMessage);
+                    Logger.GetInstance(context).LogError(errorMessage);
                     return;
                 }
 
@@ -117,13 +119,13 @@ public class OpenAppService extends IntentService implements ResultCallback,
 
                     // Start phone call
                     CallGatePhone();
-                    Log.d(Constants.TAG, "Opened gate");
+                    Logger.GetInstance(context).LogInfo("Opened gate");
                     // Send notification and log the transition details.
                     //sendNotification(geofenceTransitionDetails);
                     // Log.i(TAG, geofenceTransitionDetails);
                 } else {
                     // Log the error.
-                    Log.e(Constants.TAG, getResources().getString(R.string.geofence_transition_invalid_type) +": " + geofencingEvent.toString() );
+                    Logger.GetInstance(context).LogError(getResources().getString(R.string.geofence_transition_invalid_type) +": " + geofencingEvent.toString() );
 
                 }
 
@@ -134,7 +136,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
     private void CallGatePhone() {
         GateSettings settings = GateSettings.GetInstance(this);
         GateDialer dial = new GateDialer(settings, this);
-        Log.d(Constants.TAG, "Calling Gate");
+        Logger.GetInstance(context).LogInfo("Calling Gate");
         dial.dial();
     }
 
@@ -182,7 +184,6 @@ public class OpenAppService extends IntentService implements ResultCallback,
     private void initializeTimerTask() {
         timerTask = new TimerTask() {
             public void run() {
-                //use a handler to run a toast that shows the current timestamp
                 handler.post(new Runnable() {
                     public void run() {
                         try {
@@ -192,10 +193,10 @@ public class OpenAppService extends IntentService implements ResultCallback,
                                         getGeofencingRequest(),
                                         getGeofencePendingIntent()
                                 ).setResultCallback(thisService);
-                                Log.d(Constants.TAG, "Added Geofence");
+                                Logger.GetInstance(context).LogInfo("Added Geofence");
                                 timerTask.cancel();
                             } else {
-                                Log.d(Constants.TAG, "Waiting for google services connection");
+                                Logger.GetInstance(context).LogInfo("Waiting for google services connection");
                             }
                         } catch (SecurityException ex) {
                             ex.printStackTrace();
@@ -261,18 +262,18 @@ public class OpenAppService extends IntentService implements ResultCallback,
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         isGoogleConnected = true;
-        Log.d(Constants.TAG, "Connected to Google API");
+        Logger.GetInstance(context).LogInfo("Connected to Google API");
     }
 
     @Override
     public void onConnectionSuspended(int i) {
         isGoogleConnected = false;
-        Log.d(Constants.TAG, "Connection to Google suspended");
+        Logger.GetInstance(context).LogInfo("Connection to Google suspended");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         isGoogleConnected = false;
-        Log.d(Constants.TAG, "Connection to Google failed");
+        Logger.GetInstance(context).LogInfo("Connection to Google failed");
     }
 }

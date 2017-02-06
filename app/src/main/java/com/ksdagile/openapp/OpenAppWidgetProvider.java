@@ -25,7 +25,12 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d("AppWidgetProvider", "OnReceive");
+        Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
+        if (handler.getClass() != DefaultExceptionHandler.class) {
+            Thread.setDefaultUncaughtExceptionHandler(
+                    new DefaultExceptionHandler(context));
+        }
+        Logger.GetInstance(context).LogInfo("OnReceive");
         if (intent.hasExtra(WIDGET_IDS_KEY)) {
             int[] ids = intent.getExtras().getIntArray(WIDGET_IDS_KEY);
             this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
@@ -44,8 +49,7 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager,
                          int[] appWidgetIds) {
-
-        Log.d("AppWidgetProvider", "onUpdate");
+        Logger.GetInstance(context).LogInfo("onUpdate");
         // Get all ids
         ComponentName thisWidget =
                 new ComponentName(context, OpenAppWidgetProvider.class);
