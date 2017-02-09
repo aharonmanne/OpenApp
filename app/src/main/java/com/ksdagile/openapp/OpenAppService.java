@@ -32,8 +32,6 @@
  * <p>
  */
 
-// TODO: Why does service start automatically after configuration finished
-// TODO:
 public class OpenAppService extends IntentService implements ResultCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     private static final String ACTION_START = "com.ksdagile.openapp.action.START";
@@ -60,7 +58,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
      *
      * @see IntentService
      */
-    public static void startActionStart(Context context) {
+    public static void StartGateService(Context context) {
         GateSettings statSettings = GateSettings.GetInstance(context);
         if (statSettings.GetLicenseStatus() == Constants.LICENSE_ALLOWED) {
             Intent intent = new Intent(context, OpenAppService.class);
@@ -79,7 +77,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
      *
      * @see IntentService
      */
-    public static void startActionStop(Context context) {
+    public static void StopGateService(Context context) {
         Intent intent = new Intent(context, OpenAppService.class);
         intent.setAction(ACTION_STOP);
         Toast.makeText(context, context.getResources().getText(R.string.stopping), Toast.LENGTH_LONG).show();

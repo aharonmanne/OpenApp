@@ -86,6 +86,7 @@ public class GateSettings {
         } catch (FileNotFoundException e) {
             Log.e(Constants.TAG, "File not found: " + e.toString());
             isReadFail = true;
+            e.printStackTrace();
         } catch (IOException e) {
             Log.e(Constants.TAG, "Can not read file: " + e.toString());
             isReadFail = true;

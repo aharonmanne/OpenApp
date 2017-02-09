@@ -1,33 +1,16 @@
 <resources>
     <string name="app_name">OpenApp</string>
-    <string name="on">מופעל</string>
-    <string name="off">מופסק</string>
-    <string name="running_state">רץ</string>
-    <string name="stopped_state">מופסק</string>
-    <string name="start">הפעלה</string>
-    <string name="stop">הפסק</string>
-    <string name="gate_num_prompt">טלפון בשער</string>
-    <string name="gate_location">מיקום שער</string>
-    <string name="gate_phone_pref">טלפון בשער</string>
-    <string name="gate_longitude_pref">קו אורך שער</string>
-    <string name="gate_latitude_pref">קו רוחב שער</string>
-    <string name="running">בריצה</string>
     <string name="save">שמירה</string>
-    <string name="clear">נקה\י</string>
-    <string name="must_set_lat_long">מיקום שער לא הוגדר</string>
     <string name="title_activity_config">קונפיגורציה</string>
     <string name="phone_hint">הקלד\\י מספר טלפון או שם</string>
-    <string name="location_button">מיקום שער</string>
     <string name="phone_required">מספר טלפון חובה</string>
-    <string name="configuration_prompt">OpenApp קונפיקורציה של</string>
-    <string name="title_of_configuration_screen">כותרת מסך קונפיגורציה</string>
     <string name="title_activity_gate_location">מקום השער</string>
     <string name="geofence_transition_invalid_type">Invalid Geofence Transition</string>
     <string name="cannot_dial">לא ניתן לחייג</string>
-    <string name="no_google_connection">Not connected to Google Services</string>
     <string name="no_phone">מספר טלפון לא שמור</string>
     <string name="no_location">מקום השער לא שמור</string>
     <string name="no_license">אין רשיון תוכנה</string>
     <string name="starting">מתחיל שירות פתיחה אוטומטית</string>
     <string name="stopping">מפסיק שרות</string>
+    <string name="config_title">קונפיגורציה</string>
 </resources>

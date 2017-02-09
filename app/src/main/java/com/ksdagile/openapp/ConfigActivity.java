@@ -276,9 +276,9 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         context.sendBroadcast(updateIntent);
 
         //Create the return Intent, set it with the Activity result, and finish the Activity:
-        Intent resultValue = new Intent();
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        setResult(RESULT_OK, resultValue);
+        //Intent resultValue = new Intent();
+        //resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        //setResult(RESULT_OK, resultValue);
         finish();
     }
 

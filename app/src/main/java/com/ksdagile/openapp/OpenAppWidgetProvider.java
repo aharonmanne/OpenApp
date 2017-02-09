@@ -9,10 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 /**
  * Created by user on 08/11/2016.
@@ -23,22 +21,22 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_CLICK = "ACTION_CLICK";
     public static final String WIDGET_IDS_KEY = "OA_WIDGET_IDS";
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        Log.d("AppWidgetProvider", "OnReceive");
-        if (intent.hasExtra(WIDGET_IDS_KEY)) {
-            int[] ids = intent.getExtras().getIntArray(WIDGET_IDS_KEY);
-            this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
-        } else super.onReceive(context, intent);
-    }
-
-    @Override
-    public void  onAppWidgetOptionsChanged (Context context,
-                                                AppWidgetManager appWidgetManager,
-                                                int appWidgetId,
-                                                Bundle newOptions) {
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
-    }
+   // @Override
+   // public void onReceive(Context context, Intent intent) {
+   //     Log.d("AppWidgetProvider", "OnReceive");
+   //     if (intent.hasExtra(WIDGET_IDS_KEY)) {
+   //         int[] ids = intent.getExtras().getIntArray(WIDGET_IDS_KEY);
+   //         this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
+   //     } else super.onReceive(context, intent);
+   // }
+//
+   // @Override
+   // public void  onAppWidgetOptionsChanged (Context context,
+   //                                             AppWidgetManager appWidgetManager,
+   //                                             int appWidgetId,
+   //                                             Bundle newOptions) {
+   //     super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+   // }
     // TODO: don't toggle state if this is the first call to onUpdate after configuration
 
     @Override
@@ -53,24 +51,22 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
 
         int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
         boolean isRunning = settings.GetIsRunning();
-        boolean isNewWidget = settings.GetIsNewWidget();
-        Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
-        if (false == isNewWidget) {
+        boolean isSaved = settings.GetIsSaved();
+        Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.no_config);
+        if (isSaved) {
+            Log.d(Constants.TAG, "Config Saved");
             isRunning = !isRunning;
             settings.SetIsRunning(isRunning);
             if (isRunning) {
-                OpenAppService.startActionStart(context);
+                OpenAppService.StartGateService(context);
             } else {
-                OpenAppService.startActionStop(context);
+                OpenAppService.StopGateService(context);
             }
-        } else {
-            settings.SetIsNewWidget(false);
+            if (isRunning)
+                bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.on_toggle);
+            else
+                bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
         }
-
-        if (isRunning)
-            bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.on_toggle);
-        else
-            bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.off_toggle);
 
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
                 R.layout.widget_layout);
@@ -87,6 +83,12 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
                     0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
             appWidgetManager.updateAppWidget(widgetId, remoteViews);
+        }
+        if (!isSaved) {
+            Log.d(Constants.TAG, "No Config, starting Activity");
+            Intent intent = new Intent(context, ConfigActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
         }
 	}
 }
