@@ -186,10 +186,10 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     private void SaveGateFinish() {
         String saveError = "OK";
 
-        if (settings.GetLatitude() > GateSettings.MAX_LAT ||
-                settings.GetLongitude() > GateSettings.MAX_LONG)
+        if (GateSettings.GetInstance(context).GetLatitude() > GateSettings.MAX_LAT ||
+                GateSettings.GetInstance(context).GetLongitude() > GateSettings.MAX_LONG)
             saveError = context.getResources().getString(R.string.no_location);
-        if (settings.GetPhone() == null)
+        if (GateSettings.GetInstance(context).GetPhone() == null)
             saveError = context.getResources().getString(R.string.no_phone);
         if (saveError == "OK")
             LeaveConfig();
@@ -255,7 +255,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             fragmentTransaction.replace(R.id.fragment_place, mapFragment);
             fragmentTransaction.addToBackStack(null);
             fragmentTransaction.commit();
-            settings.SetPhone(phoneNum);
+            GateSettings.GetInstance(context).SetPhone(phoneNum);
 
         } catch (Exception ex) {
             Log.d("ConfigActivity", ex.getMessage());
@@ -284,7 +284,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
 
     @Override
     protected void onStart() {
-        if (settings.GetLicenseStatus() != Constants.LICENSE_ALLOWED) {
+        if (GateSettings.GetInstance(context).GetLicenseStatus() != Constants.LICENSE_ALLOWED) {
             googleApiClient.connect();
         }
         super.onStart();
@@ -374,11 +374,11 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                     googleApiClient);
             boolean isKeptLocation =
-                    settings.GetLatitude() <= GateSettings.MAX_LAT &&
-                            settings.GetLongitude() <= GateSettings.MAX_LONG;
+                    GateSettings.GetInstance(context).GetLatitude() <= GateSettings.MAX_LAT &&
+                            GateSettings.GetInstance(context).GetLongitude() <= GateSettings.MAX_LONG;
             if (lastLocation != null & !isKeptLocation) {
-                settings.SetLatitude(lastLocation.getLatitude());
-                settings.SetLongitude(lastLocation.getLongitude());
+                GateSettings.GetInstance(context).SetLatitude(lastLocation.getLatitude());
+                GateSettings.GetInstance(context).SetLongitude(lastLocation.getLongitude());
             }
             CheckPhonePermission();
         }
@@ -426,11 +426,11 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                         lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                                 googleApiClient);
                         boolean isKeptLocation =
-                                settings.GetLatitude() <= GateSettings.MAX_LAT &&
-                                        settings.GetLongitude() <= GateSettings.MAX_LONG;
+                                GateSettings.GetInstance(context).GetLatitude() <= GateSettings.MAX_LAT &&
+                                        GateSettings.GetInstance(context).GetLongitude() <= GateSettings.MAX_LONG;
                         if (lastLocation != null & !isKeptLocation) {
-                            settings.SetLatitude(lastLocation.getLatitude());
-                            settings.SetLongitude(lastLocation.getLongitude());
+                            GateSettings.GetInstance(context).SetLatitude(lastLocation.getLatitude());
+                            GateSettings.GetInstance(context).SetLongitude(lastLocation.getLongitude());
                         }
                     } catch (SecurityException secEx) {
                         Log.d(Constants.TAG, "Security Exception: " + secEx.getMessage());
@@ -480,12 +480,12 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        double latitude = settings.GetLatitude();
-        double longitude = settings.GetLongitude();
+        double latitude = GateSettings.GetInstance(context).GetLatitude();
+        double longitude = GateSettings.GetInstance(context).GetLongitude();
         String gateTitle = getResources().getString(R.string.title_activity_gate_location);
-        if (latitude > GateSettings.MAX_LAT)
+        if (latitude > GateSettings.GetInstance(context).MAX_LAT)
             latitude = 0;
-        if (longitude > GateSettings.MAX_LONG)
+        if (longitude > GateSettings.GetInstance(context).MAX_LONG)
             longitude = 0;
         googleMap.addMarker(new MarkerOptions()
                 .position(new LatLng(latitude, longitude))
@@ -515,7 +515,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     }
     private class MyLicenseCheckerCallback implements LicenseCheckerCallback {
         public void allow(int policyReason) {
-            settings.SetLicenseStatus(Constants.LICENSE_ALLOWED);
+            GateSettings.GetInstance(context).SetLicenseStatus(Constants.LICENSE_ALLOWED);
             if (isFinishing()) {
                 // Don't update UI if Activity is finishing.
                 return;
@@ -525,7 +525,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         }
 
         public void dontAllow(int policyReason) {
-            settings.SetLicenseStatus(Constants.LICENSE_REJECTED);
+            GateSettings.GetInstance(context).SetLicenseStatus(Constants.LICENSE_REJECTED);
             if (isFinishing()) {
                 // Don't update UI if Activity is finishing.
                 return;
