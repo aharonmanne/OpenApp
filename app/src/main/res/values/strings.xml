@@ -13,4 +13,5 @@
     <string name="starting">Starting OpenApp Service</string>
     <string name="stopping">Stopping Service</string>
     <string name="config_title">OpenApp Configuration</string>
+    <string name="gps_required">Please turn on location services (GPS)</string>
 </resources>

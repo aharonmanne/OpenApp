@@ -13,4 +13,5 @@
     <string name="starting">מתחיל שירות פתיחה אוטומטית</string>
     <string name="stopping">מפסיק שרות</string>
     <string name="config_title">קונפיגורציה</string>
+    <string name="gps_required">נא להפעיל שירותי מיקום (ג\'י פי אס)</string>
 </resources>
