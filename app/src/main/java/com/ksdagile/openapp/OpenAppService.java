@@ -154,6 +154,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
                         )
                         .setExpirationDuration(NEVER_EXPIRE)
                         .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                        .setNotificationResponsiveness(1000)
                         .build();
         // Create an instance of GoogleAPIClient.
         if (googleApiClient == null) {
