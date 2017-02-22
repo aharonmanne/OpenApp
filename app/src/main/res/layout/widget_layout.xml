@@ -9,7 +9,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/no_config"
+        android:src="@drawable/gate_icon"
         android:contentDescription="Layout Background"
         android:id="@+id/toggle"/>
 

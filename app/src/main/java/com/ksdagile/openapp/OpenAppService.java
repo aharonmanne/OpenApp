@@ -1,30 +1,34 @@
-        package com.ksdagile.openapp;
+package com.ksdagile.openapp;
 
-        import android.app.IntentService;
-        import android.app.PendingIntent;
-        import android.content.Intent;
-        import android.content.Context;
-        import android.os.Bundle;
-        import android.os.Handler;
-        import android.support.annotation.NonNull;
-        import android.support.annotation.Nullable;
-        import android.util.Log;
-        import android.widget.Toast;
+import android.app.IntentService;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.content.Context;
+import android.location.Location;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
+import android.widget.Toast;
 
-        import com.google.android.gms.common.ConnectionResult;
-        import com.google.android.gms.common.api.GoogleApiClient;
-        import com.google.android.gms.common.api.Result;
-        import com.google.android.gms.common.api.ResultCallback;
-        import com.google.android.gms.location.Geofence;
-        import com.google.android.gms.location.GeofencingEvent;
-        import com.google.android.gms.location.GeofencingRequest;
-        import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Result;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingEvent;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
 
-        import java.util.List;
-        import java.util.Timer;
-        import java.util.TimerTask;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
-        import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
+import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -43,11 +47,21 @@ public class OpenAppService extends IntentService implements ResultCallback,
 
     private GoogleApiClient googleApiClient;
     private boolean isGoogleConnected;
-    Timer timer;
-    TimerTask timerTask;
-    //we are going to use a handler to be able to run in our TimerTask
-    final Handler handler = new Handler();
+    CountDownTimer timer;
+
     private OpenAppService thisService = this;
+    private long countdownMS;
+    private Location LastLocation;
+    private static GateSettings gateSettings;
+    private float distance2Gate;
+    Handler serviceHandler;
+    private boolean isCallMade;
+
+    enum DISTANCE2GATE {NEAR_GATE, FAR_GATE}
+
+    ;
+    private DISTANCE2GATE distance2GateState;
+
     public OpenAppService() {
         super("OpenAppService");
     }
@@ -59,14 +73,13 @@ public class OpenAppService extends IntentService implements ResultCallback,
      * @see IntentService
      */
     public static void StartGateService(Context context) {
-        GateSettings statSettings = GateSettings.GetInstance(context);
-        if (statSettings.GetLicenseStatus() == Constants.LICENSE_ALLOWED) {
+        gateSettings = GateSettings.GetInstance(context);
+        if (gateSettings.GetLicenseStatus() == Constants.LICENSE_ALLOWED) {
             Intent intent = new Intent(context, OpenAppService.class);
             intent.setAction(ACTION_START);
             context.startService(intent);
             Toast.makeText(context, context.getResources().getText(R.string.starting), Toast.LENGTH_LONG).show();
-        }
-        else {
+        } else {
             Toast.makeText(context, context.getResources().getText(R.string.no_license), Toast.LENGTH_LONG).show();
         }
     }
@@ -82,6 +95,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
         intent.setAction(ACTION_STOP);
         Toast.makeText(context, context.getResources().getText(R.string.stopping), Toast.LENGTH_LONG).show();
         context.startService(intent);
+        gateSettings = GateSettings.GetInstance(context);
     }
 
     @Override
@@ -121,8 +135,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
                     // Log.i(TAG, geofenceTransitionDetails);
                 } else {
                     // Log the error.
-                    Log.e(Constants.TAG, getResources().getString(R.string.geofence_transition_invalid_type) +": " + geofencingEvent.toString() );
-
+                    Log.e(Constants.TAG, getResources().getString(R.string.geofence_transition_invalid_type) + ": " + geofencingEvent.toString());
                 }
 
             }
@@ -130,8 +143,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
     }
 
     private void CallGatePhone() {
-        GateSettings settings = GateSettings.GetInstance(this);
-        GateDialer dial = new GateDialer(settings, this);
+        GateDialer dial = new GateDialer(gateSettings, this);
         Log.d(Constants.TAG, "Calling Gate");
         dial.dial();
     }
@@ -140,22 +152,24 @@ public class OpenAppService extends IntentService implements ResultCallback,
      * Set up location tracking and configure open gate trigger.
      */
     private void handleActionStart() {
-        GateSettings settings = GateSettings.GetInstance(getApplicationContext());
-        Geofence.Builder builder = new Geofence.Builder();
-        gateGeofence =
-                builder
-                        // Set the request ID of the geofence. This is a string to identify this
-                        // geofence.
-                        .setRequestId(GATE_REQUEST_ID)
-                        .setCircularRegion(
-                                settings.GetLatitude(),
-                                settings.GetLongitude(),
-                                Constants.GEOFENCE_RADIUS_METERS
-                        )
-                        .setExpirationDuration(NEVER_EXPIRE)
-                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                        .setNotificationResponsiveness(1000)
-                        .build();
+
+        serviceHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message inputMessage) {
+                CalculateGateDistance();
+                if (distance2GateState == DISTANCE2GATE.NEAR_GATE) {
+                    if (!isCallMade)
+                        CallGatePhone();
+                    countdownMS = 5000; // run 5 second timer to check status
+                    isCallMade = true;
+                } else {
+                    CalcCountdown();
+                    isCallMade = false;
+                }
+                RestartTimer();
+            }
+        };
+
         // Create an instance of GoogleAPIClient.
         if (googleApiClient == null) {
             isGoogleConnected = false;
@@ -166,44 +180,29 @@ public class OpenAppService extends IntentService implements ResultCallback,
                     .build();
         }
         googleApiClient.connect();
-
-        //set a new Timer
-        timer = new Timer();
-        //initialize the TimerTask's job
-        initializeTimerTask();
-
-        //schedule the timer, after the first 5000ms the TimerTask will run every 10000ms
-        timer.schedule(timerTask, 500, 1000); //
-
-
     }
 
-    private void initializeTimerTask() {
-        timerTask = new TimerTask() {
-            public void run() {
-                //use a handler to run a toast that shows the current timestamp
-                handler.post(new Runnable() {
-                    public void run() {
-                        try {
-                            if (isGoogleConnected) {
-                                LocationServices.GeofencingApi.addGeofences(
-                                        googleApiClient,
-                                        getGeofencingRequest(),
-                                        getGeofencePendingIntent()
-                                ).setResultCallback(thisService);
-                                Log.d(Constants.TAG, "Added Geofence");
-                                timerTask.cancel();
-                            } else {
-                                Log.d(Constants.TAG, "Waiting for google services connection");
-                            }
-                        } catch (SecurityException ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                });
+    private void CalculateGateDistance() {
+        try {
+
+            LastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    googleApiClient);
+            if (LastLocation != null) {
+                float[] results = new float[1];
+                Location.distanceBetween(LastLocation.getLatitude(), LastLocation.getLongitude(), gateSettings.GetLatitude(), gateSettings.GetLongitude(), results);
+                distance2Gate = results[0];
+                Log.d(Constants.TAG, "Distance to gate: " + Float.toString(distance2Gate));
+                if (Constants.GEOFENCE_RADIUS_METERS > distance2Gate) {
+                    distance2GateState = DISTANCE2GATE.NEAR_GATE;
+                } else {
+                    distance2GateState = DISTANCE2GATE.FAR_GATE;
+                }
             }
-        };
+        } catch (SecurityException secEx) {
+            secEx.printStackTrace();
+        }
     }
+
 
     /**
      * Stop location tracking.
@@ -211,43 +210,12 @@ public class OpenAppService extends IntentService implements ResultCallback,
     private void handleActionStop() {
 
         if (googleApiClient != null) {
-            LocationServices.GeofencingApi.removeGeofences(
-                    googleApiClient,
-                    // This is the same pending intent that was used in addGeofences().
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
-            LocationServices.GeofencingApi.removeGeofences(
-                    googleApiClient,
-                    // This is the same pending intent that was used in addGeofences().
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
-            if (timerTask != null)
-                timerTask.cancel();
+
+            if (timer != null)
+                timer.cancel();
         }
     }
 
-    /*
-    * Geofence Support
-    */
-
-    private GeofencingRequest getGeofencingRequest() {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-        builder.addGeofence(gateGeofence);
-        return builder.build();
-    }
-
-    private PendingIntent getGeofencePendingIntent() {
-        // Reuse the PendingIntent if we already have it.
-        if (gateGeofencePendingIntent != null) {
-            return gateGeofencePendingIntent;
-        }
-        Intent intent = new Intent(this, this.getClass());
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
-        // calling addGeofences() and removeGeofences().
-        return PendingIntent.getService(this, 0, intent, PendingIntent.
-                FLAG_UPDATE_CURRENT);
-    }
 
     @Override
     public void onResult(@NonNull Result result) {
@@ -260,7 +228,30 @@ public class OpenAppService extends IntentService implements ResultCallback,
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         isGoogleConnected = true;
+        serviceHandler.sendEmptyMessage(0);
         Log.d(Constants.TAG, "Connected to Google API");
+    }
+
+    private void RestartTimer() {
+        timer = new CountDownTimer(countdownMS, countdownMS) {
+            @Override
+            public void onTick(long l) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                serviceHandler.sendEmptyMessage(0);
+            }
+        };
+        timer.start();
+    }
+
+    // countdown to next check assumes 100 kph travel = 100000/(60*60)
+    private void CalcCountdown() {
+        countdownMS = (long) (distance2Gate / (100000.0 / (60.0 * 60.0)));
+        if (countdownMS < 5000)
+            countdownMS = 5000;
     }
 
     @Override

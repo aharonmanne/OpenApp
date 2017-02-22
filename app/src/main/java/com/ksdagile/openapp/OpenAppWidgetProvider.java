@@ -23,16 +23,25 @@ import android.widget.Toast;
 public class OpenAppWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_CLICK = "ACTION_CLICK";
     public static final String WIDGET_IDS_KEY = "OA_WIDGET_IDS";
+    private static final String IsToggleName = "IS_TOGGLE";
+    private boolean isToggle;
 
-    // @Override
-    // public void onReceive(Context context, Intent intent) {
-    //     Log.d("AppWidgetProvider", "OnReceive");
-    //     if (intent.hasExtra(WIDGET_IDS_KEY)) {
-    //         int[] ids = intent.getExtras().getIntArray(WIDGET_IDS_KEY);
-    //         this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
-    //     } else super.onReceive(context, intent);
-    // }
-//
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Log.d("AppWidgetProvider", "OnReceive");
+        isToggle = false;
+        if (intent.hasExtra(IsToggleName)) {
+            isToggle = intent.getBooleanExtra(IsToggleName, false);
+        }
+        if (intent.hasExtra(WIDGET_IDS_KEY)) {
+            int[] ids = intent.getExtras().getIntArray(WIDGET_IDS_KEY);
+            this.onUpdate(context, AppWidgetManager.getInstance(context), ids);
+
+        } else {
+            super.onReceive(context, intent);
+        }
+    }
+
     // @Override
     // public void  onAppWidgetOptionsChanged (Context context,
     //                                             AppWidgetManager appWidgetManager,
@@ -60,19 +69,24 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             Log.d(Constants.TAG, "Config Saved");
             isRunning = !isRunning;
             settings.SetIsRunning(isRunning);
-            if (isRunning) {
-                if (IsGPSon(context)) {
-                    OpenAppService.StartGateService(context);
+            if (isToggle) {
+                if (isRunning) {
+                    if (IsGPSon(context)) {
+                        OpenAppService.StartGateService(context);
+                    } else {
+                        Toast.makeText(context, context.getResources().getText(R.string.gps_required).toString(), Toast.LENGTH_SHORT).show();
+                        isRunning = false;
+                        settings.SetIsNewWidget(isRunning);
+                        Intent i = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(i);
+                    }
                 } else {
-                    Toast.makeText(context, context.getResources().getText(R.string.gps_required).toString(), Toast.LENGTH_SHORT).show();
-                    isRunning = false;
-                    settings.SetIsNewWidget(isRunning);
-                    Intent i = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(i);
+                    OpenAppService.StopGateService(context);
                 }
             } else {
-                OpenAppService.StopGateService(context);
+                isRunning = false;
+                settings.SetIsRunning(isRunning);
             }
             if (isRunning)
                 bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_on);
@@ -90,6 +104,7 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
 
             intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+            intent.putExtra(IsToggleName, true);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
                     0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
