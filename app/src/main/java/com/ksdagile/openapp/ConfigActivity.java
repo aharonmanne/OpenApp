@@ -88,7 +88,9 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 .build();
     }
 
-    enum ACTIVITY_STATE {INIT_STATE, LITERAL_IN, LOCATION};
+    enum ACTIVITY_STATE {INIT_STATE, LITERAL_IN, LOCATION}
+
+    ;
     static ACTIVITY_STATE state = ACTIVITY_STATE.INIT_STATE;
     // A handler on the UI thread.
     private Handler mHandler;
@@ -201,11 +203,24 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     private void CheckSavePhone() {
         EditText phoneNumber = (EditText) findViewById(R.id.editTextPhone);
         String phoneNum = phoneNumber.getText().toString();
+        EditText activationDistanceView = (EditText) findViewById(R.id.editTextDistance);
+        Integer activationDistance = null;
+        try {
+            activationDistance = Integer.decode(activationDistanceView.getText().toString());
+        } catch (NumberFormatException nfEx) {
+            nfEx.printStackTrace();
+        }
 
         if (phoneNum == null || phoneNum.isEmpty()) {
             Toast.makeText(
                     context,
                     getResources().getText(R.string.phone_required).toString(),
+                    Toast.LENGTH_LONG
+            ).show();
+        } else if (activationDistance == null) {
+            Toast.makeText(
+                    context,
+                    getResources().getText(R.string.distance_hint).toString(),
                     Toast.LENGTH_LONG
             ).show();
         } else {
@@ -216,7 +231,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 phoneNum = GetPhoneFromName(contactNameID.get(phoneNum));
             }
             state = ACTIVITY_STATE.LOCATION;
-            SavePhoneChooseGate(phoneNum);
+            SavePhoneChooseGate(phoneNum, activationDistance);
         }
     }
 
@@ -247,7 +262,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         return phoneNum;
     }
 
-    private void SavePhoneChooseGate(String phoneNum) {
+    private void SavePhoneChooseGate(String phoneNum, Integer activationDistance) {
         try {
             FragmentManager fragmentManager = getFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -256,6 +271,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             fragmentTransaction.addToBackStack(null);
             fragmentTransaction.commit();
             GateSettings.GetInstance(context).SetPhone(phoneNum);
+            GateSettings.GetInstance(context).SetActivationDistance(activationDistance);
 
         } catch (Exception ex) {
             Log.d("ConfigActivity", ex.getMessage());
@@ -328,7 +344,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
     protected void onStop() {
         googleApiClient.disconnect();
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
-                        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(googleApiClient, getIndexApiAction());
         state = ACTIVITY_STATE.INIT_STATE;
     }
@@ -513,48 +529,49 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             }
         });
     }
-    private class MyLicenseCheckerCallback implements LicenseCheckerCallback {
-        public void allow(int policyReason) {
-            GateSettings.GetInstance(context).SetLicenseStatus(Constants.LICENSE_ALLOWED);
-            if (isFinishing()) {
-                // Don't update UI if Activity is finishing.
-                return;
-            }
-            // Should allow user access.
-            //displayResult(getString(R.string.allow));
-        }
 
-        public void dontAllow(int policyReason) {
-            GateSettings.GetInstance(context).SetLicenseStatus(Constants.LICENSE_REJECTED);
-            if (isFinishing()) {
-                // Don't update UI if Activity is finishing.
-                return;
-            }
-            //displayResult(getString(R.string.dont_allow));
-            // Should not allow access. In most cases, the app should assume
-            // the user has access unless it encounters this. If it does,
-            // the app should inform the user of their unlicensed ways
-            // and then either shut down the app or limit the user to a
-            // restricted set of features.
-            // In this example, we show a dialog that takes the user to Market.
-            // If the reason for the lack of license is that the service is
-            // unavailable or there is another problem, we display a
-            // retry button on the dialog and a different message.
-            displayDialog(policyReason == Policy.RETRY);
+private class MyLicenseCheckerCallback implements LicenseCheckerCallback {
+    public void allow(int policyReason) {
+        GateSettings.GetInstance(context).SetLicenseStatus(Constants.LICENSE_ALLOWED);
+        if (isFinishing()) {
+            // Don't update UI if Activity is finishing.
+            return;
         }
-
-        public void applicationError(int errorCode) {
-            if (isFinishing()) {
-                // Don't update UI if Activity is finishing.
-                return;
-            }
-            // This is a polite way of saying the developer made a mistake
-            // while setting up or calling the license checker library.
-            // Please examine the error code and fix the error.
-            //String result = String.format(getString(R.string.application_error), errorCode);
-            //displayResult(result);
-        }
+        // Should allow user access.
+        //displayResult(getString(R.string.allow));
     }
+
+    public void dontAllow(int policyReason) {
+        GateSettings.GetInstance(context).SetLicenseStatus(Constants.LICENSE_REJECTED);
+        if (isFinishing()) {
+            // Don't update UI if Activity is finishing.
+            return;
+        }
+        //displayResult(getString(R.string.dont_allow));
+        // Should not allow access. In most cases, the app should assume
+        // the user has access unless it encounters this. If it does,
+        // the app should inform the user of their unlicensed ways
+        // and then either shut down the app or limit the user to a
+        // restricted set of features.
+        // In this example, we show a dialog that takes the user to Market.
+        // If the reason for the lack of license is that the service is
+        // unavailable or there is another problem, we display a
+        // retry button on the dialog and a different message.
+        displayDialog(policyReason == Policy.RETRY);
+    }
+
+    public void applicationError(int errorCode) {
+        if (isFinishing()) {
+            // Don't update UI if Activity is finishing.
+            return;
+        }
+        // This is a polite way of saying the developer made a mistake
+        // while setting up or calling the license checker library.
+        // Please examine the error code and fix the error.
+        //String result = String.format(getString(R.string.application_error), errorCode);
+        //displayResult(result);
+    }
+}
 
 
 }
