@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">OpenApp</string>
     <string name="save">שמירה</string>
     <string name="title_activity_config">קונפיגורציה</string>
     <string name="phone_hint">הקלד\\י מספר טלפון או שם</string>
@@ -14,4 +13,6 @@
     <string name="stopping">מפסיק שרות</string>
     <string name="config_title">קונפיגורציה</string>
     <string name="gps_required">נא להפעיל שירותי מיקום (ג\'י פי אס)</string>
+    <string name="distance_hint">מרחק הפעלה במטרים</string>
+    <string name="app_name" translatable="false"></string>
 </resources>

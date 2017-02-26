@@ -34,6 +34,7 @@ public class GateSettings {
     private boolean IsSaved;
     private int LicenseStatus;
     private boolean IsNewWidget;
+    private int ActivationDistance;
     private static String SettingsFile = "Settings.json";
     private static String PHONE_NAME = "phone";
     private static String LAT_NAME = "latitude";
@@ -42,6 +43,7 @@ public class GateSettings {
     private static String IS_SAVED = "is_saved";
     private static String LICENSE_STATUS = "license_status";
     private static String NEW_WIDGET = "new_widget";
+    private static String ACTIVATION_DISTANCE = "activation_distance";
     private Context context;
     private InputStream InputStream;
     private OutputStream OutputStream;
@@ -79,6 +81,8 @@ public class GateSettings {
                     LicenseStatus = reader.nextInt();
                 } else if (name.equals(NEW_WIDGET)) {
                     IsNewWidget = reader.nextBoolean();
+                } else if (name.equals(ACTIVATION_DISTANCE)) {
+                    ActivationDistance = reader.nextInt();
                 }
             }
             reader.endObject();
@@ -107,6 +111,7 @@ public class GateSettings {
         IsSaved = false;
         LicenseStatus = Constants.LICENSE_NO_ANSWER;
         IsNewWidget = true;
+        ActivationDistance = -1;
     }
 
     private void Save() {
@@ -123,6 +128,7 @@ public class GateSettings {
             writer.name(IS_SAVED).value(IsSaved);
             writer.name(LICENSE_STATUS).value(LicenseStatus);
             writer.name(NEW_WIDGET).value(IsNewWidget);
+            writer.name(ACTIVATION_DISTANCE).value(ActivationDistance);
             writer.endObject();
             writer.close();
             OutputStream.close();
@@ -198,5 +204,11 @@ public class GateSettings {
             IsNewWidget = _isNewWidget;
             Save();
         }
+    }
+
+    public int GetActivationDistance() {return ActivationDistance;}
+    public void SetActivationDistance(int _activationDistance) {
+        ActivationDistance = _activationDistance;
+        Save();
     }
 }

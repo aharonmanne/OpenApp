@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenApp</string>
+    <string name="app_name" translatable="false">OpenApp</string>
     <string name="save">Save</string>
     <string name="title_activity_config">ConfigActivity</string>
     <string name="phone_hint">Enter Phone Number or Contact</string>
@@ -14,4 +14,5 @@
     <string name="stopping">Stopping Service</string>
     <string name="config_title">OpenApp Configuration</string>
     <string name="gps_required">Please turn on location services (GPS)</string>
+    <string name="distance_hint">Activation Distance in Meters</string>
 </resources>

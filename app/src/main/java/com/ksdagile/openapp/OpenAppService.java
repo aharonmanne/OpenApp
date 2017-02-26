@@ -192,7 +192,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
                 Location.distanceBetween(LastLocation.getLatitude(), LastLocation.getLongitude(), gateSettings.GetLatitude(), gateSettings.GetLongitude(), results);
                 distance2Gate = results[0];
                 Log.d(Constants.TAG, "Distance to gate: " + Float.toString(distance2Gate));
-                if (Constants.GEOFENCE_RADIUS_METERS > distance2Gate) {
+                if (gateSettings.GetActivationDistance() > distance2Gate) {
                     distance2GateState = DISTANCE2GATE.NEAR_GATE;
                 } else {
                     distance2GateState = DISTANCE2GATE.FAR_GATE;

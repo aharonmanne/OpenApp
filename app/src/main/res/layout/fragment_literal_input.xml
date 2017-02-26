@@ -5,6 +5,17 @@
     tools:context="com.ksdagile.openapp.Literal_Input">
 
 
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems = "10"
+        android:id="@+id/editTextDistance"
+        android:hint="@string/distance_hint"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="50dp"
+        android:inputType="number" />
+
     <AutoCompleteTextView
         android:layout_width="wrap_content"
         android:layout_height="69dp"
