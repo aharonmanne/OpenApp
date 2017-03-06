@@ -17,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ToggleButton;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,14 +44,18 @@ public class Literal_Input extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_literal_input, container, false);
+        GateSettings settings = GateSettings.GetInstance(getActivity());
 
         AutoCompleteTextView phoneNumber = (AutoCompleteTextView) v.findViewById(R.id.editTextPhone);
-        String phone = GateSettings.GetInstance(getActivity()).GetPhone();
+        String phone = settings.GetPhone();
         phoneNumber.setText(phone);
         EditText distanceView = (EditText) v.findViewById(R.id.editTextDistance);
-        Integer distance = GateSettings.GetInstance(getActivity()).GetActivationDistance();
+        Integer distance = settings.GetActivationDistance();
         if (distance > 0)
             distanceView.setText(distance.toString());
+        ToggleButton useAlarm = (ToggleButton) v.findViewById(R.id.toggleButtonUseAlarm);
+        useAlarm.setChecked(settings.GetIsUseAlarm());
+
         ArrayAdapter<String> contactArrayAdapter =
                 new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, getContacts());
         phoneNumber.setAdapter(contactArrayAdapter);

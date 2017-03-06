@@ -34,6 +34,7 @@ public class GateSettings {
     private boolean IsSaved;
     private int LicenseStatus;
     private boolean IsNewWidget;
+    private boolean IsUseAlarm;
     private int ActivationDistance;
     private static String SettingsFile = "Settings.json";
     private static String PHONE_NAME = "phone";
@@ -44,6 +45,7 @@ public class GateSettings {
     private static String LICENSE_STATUS = "license_status";
     private static String NEW_WIDGET = "new_widget";
     private static String ACTIVATION_DISTANCE = "activation_distance";
+    private static String USE_ALARM = "use_alarm";
     private Context context;
     private InputStream InputStream;
     private OutputStream OutputStream;
@@ -83,6 +85,8 @@ public class GateSettings {
                     IsNewWidget = reader.nextBoolean();
                 } else if (name.equals(ACTIVATION_DISTANCE)) {
                     ActivationDistance = reader.nextInt();
+                } else if (name.equals(USE_ALARM)) {
+                    IsUseAlarm = reader.nextBoolean();
                 }
             }
             reader.endObject();
@@ -112,6 +116,7 @@ public class GateSettings {
         LicenseStatus = Constants.LICENSE_NO_ANSWER;
         IsNewWidget = true;
         ActivationDistance = -1;
+        IsUseAlarm = false;
     }
 
     private void Save() {
@@ -129,6 +134,7 @@ public class GateSettings {
             writer.name(LICENSE_STATUS).value(LicenseStatus);
             writer.name(NEW_WIDGET).value(IsNewWidget);
             writer.name(ACTIVATION_DISTANCE).value(ActivationDistance);
+            writer.name(USE_ALARM).value(IsUseAlarm);
             writer.endObject();
             writer.close();
             OutputStream.close();
@@ -158,7 +164,7 @@ public class GateSettings {
     }
 
     public void SetLongitude(double _longitude) {
-        if (_longitude != Longitude){
+        if (_longitude != Longitude) {
             Longitude = _longitude;
             Save();
         }
@@ -190,7 +196,10 @@ public class GateSettings {
         return IsSaved;
     }
 
-    public int GetLicenseStatus() {return LicenseStatus;}
+    public int GetLicenseStatus() {
+        return LicenseStatus;
+    }
+
     public void SetLicenseStatus(int _status) {
         if (_status != LicenseStatus) {
             LicenseStatus = _status;
@@ -198,7 +207,10 @@ public class GateSettings {
         }
     }
 
-    public boolean GetIsNewWidget() {return IsNewWidget;}
+    public boolean GetIsNewWidget() {
+        return IsNewWidget;
+    }
+
     public void SetIsNewWidget(boolean _isNewWidget) {
         if (_isNewWidget != IsNewWidget) {
             IsNewWidget = _isNewWidget;
@@ -206,9 +218,25 @@ public class GateSettings {
         }
     }
 
-    public int GetActivationDistance() {return ActivationDistance;}
+    public int GetActivationDistance() {
+        return ActivationDistance;
+    }
+
     public void SetActivationDistance(int _activationDistance) {
-        ActivationDistance = _activationDistance;
-        Save();
+        if (ActivationDistance != _activationDistance) {
+            ActivationDistance = _activationDistance;
+            Save();
+        }
+    }
+
+    public boolean GetIsUseAlarm() {
+        return IsUseAlarm;
+    }
+
+    public void SetUseAlarm(boolean _isUseAlarm) {
+        if (_isUseAlarm != IsUseAlarm) {
+            IsUseAlarm = _isUseAlarm;
+            Save();
+        }
     }
 }

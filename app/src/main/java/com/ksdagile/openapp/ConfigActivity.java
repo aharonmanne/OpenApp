@@ -29,6 +29,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -204,6 +205,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         EditText phoneNumber = (EditText) findViewById(R.id.editTextPhone);
         String phoneNum = phoneNumber.getText().toString();
         EditText activationDistanceView = (EditText) findViewById(R.id.editTextDistance);
+        ToggleButton tb = (ToggleButton) findViewById(R.id.toggleButtonUseAlarm);
         Integer activationDistance = null;
         try {
             activationDistance = Integer.decode(activationDistanceView.getText().toString());
@@ -231,7 +233,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 phoneNum = GetPhoneFromName(contactNameID.get(phoneNum));
             }
             state = ACTIVITY_STATE.LOCATION;
-            SavePhoneChooseGate(phoneNum, activationDistance);
+            SavePhoneChooseGate(phoneNum, activationDistance, tb.isChecked());
         }
     }
 
@@ -262,7 +264,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         return phoneNum;
     }
 
-    private void SavePhoneChooseGate(String phoneNum, Integer activationDistance) {
+    private void SavePhoneChooseGate(String phoneNum, Integer activationDistance, boolean isUseAlarm) {
         try {
             FragmentManager fragmentManager = getFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -272,6 +274,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
             fragmentTransaction.commit();
             GateSettings.GetInstance(context).SetPhone(phoneNum);
             GateSettings.GetInstance(context).SetActivationDistance(activationDistance);
+            GateSettings.GetInstance(context).SetUseAlarm(isUseAlarm);
 
         } catch (Exception ex) {
             Log.d("ConfigActivity", ex.getMessage());

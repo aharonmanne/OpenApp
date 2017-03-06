@@ -4,26 +4,47 @@
     android:layout_height="match_parent"
     tools:context="com.ksdagile.openapp.Literal_Input">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems = "10"
-        android:id="@+id/editTextDistance"
-        android:hint="@string/distance_hint"
-        android:gravity="center"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="50dp"
-        android:inputType="number" />
+        <EditText
+            android:id="@+id/editTextDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="50dp"
+            android:ems="10"
+            android:gravity="center"
+            android:hint="@string/distance_hint"
+            android:inputType="number" />
 
-    <AutoCompleteTextView
-        android:layout_width="wrap_content"
-        android:layout_height="69dp"
-        android:ems="10"
-        android:id="@+id/editTextPhone"
-        android:hint="@string/phone_hint"
-        android:gravity="center"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="100dp" />
+        <AutoCompleteTextView
+            android:id="@+id/editTextPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="69dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="50dp"
+            android:layout_marginTop="50dp"
+            android:ems="10"
+            android:gravity="center"
+            android:hint="@string/phone_hint" />
+
+        <ToggleButton
+            android:id="@+id/toggleButtonUseAlarm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/use_alarm"
+            android:textOff="@string/alarm_off"
+            android:textOn="@string/alarm_on" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/cast_expanded_controller_margin_between_seek_bar_and_control_buttons"
+            android:text="@string/alarm_explain" />
+    </LinearLayout>
 
 </FrameLayout>
