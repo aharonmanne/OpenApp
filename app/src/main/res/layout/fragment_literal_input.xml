@@ -7,12 +7,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:weightSum="1">
 
         <EditText
             android:id="@+id/editTextDistance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layoutDirection="locale"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="50dp"
             android:ems="10"
@@ -24,6 +26,7 @@
             android:id="@+id/editTextPhone"
             android:layout_width="wrap_content"
             android:layout_height="69dp"
+            android:layoutDirection="locale"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="50dp"
             android:layout_marginTop="50dp"
@@ -31,18 +34,38 @@
             android:gravity="center"
             android:hint="@string/phone_hint" />
 
-        <ToggleButton
-            android:id="@+id/toggleButtonUseAlarm"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+
+        <RadioGroup
+            android:layout_width="195dp"
+            android:layout_height="105dp"
             android:layout_gravity="center_horizontal"
-            android:text="@string/use_alarm"
-            android:textOff="@string/alarm_off"
-            android:textOn="@string/alarm_on" />
+            android:layout_weight="0.14">
+
+            <RadioButton
+                android:id="@+id/radioButtonUseAlarm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layoutDirection="locale"
+                android:checked="false"
+                android:layout_weight="1"
+                android:text="@string/alarm_on"
+                android:layout_gravity="left" />
+
+            <RadioButton
+                android:id="@+id/radioButtonBorrowLoc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layoutDirection="locale"
+                android:checked="true"
+                android:layout_weight="1"
+                android:text="@string/alarm_off"
+                android:layout_gravity="left" />
+        </RadioGroup>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layoutDirection="locale"
             android:layout_margin="@dimen/cast_expanded_controller_margin_between_seek_bar_and_control_buttons"
             android:text="@string/alarm_explain" />
     </LinearLayout>

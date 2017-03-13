@@ -15,7 +15,7 @@
     <string name="gps_required">נא להפעיל שירותי מיקום (ג\'י פי אס)</string>
     <string name="distance_hint">מרחק הפעלה במטרים</string>
     <string name="use_alarm">מעיר כשהטלפון במצב שינה</string>
-    <string name="alarm_explain">הפעל כפתור זה כשהשירות עשוי להעיר את הטלפון ממצב שינה. לא נחוץ כשהשירות מופעל יחד עם אפליקציה מבוסס ג\'י פי אס, כגון וייז או מפות גוגל.</string>
-    <string name="alarm_on">ג\'י פי אס עצמאי</string>
-    <string name="alarm_off">עם אפליקצית ג\'י פי אס</string>
+    <string name="alarm_explain">בחר \"מיקום מושאל\" כשמשתמשים במקביל באפליקציה שנוטרת מקיום, כגון וייז או מפות גוגל, אחרת בחר \"מיקום עצמאי\".</string>
+    <string name="alarm_on">מיקום עצמאי</string>
+    <string name="alarm_off">מיקום מושאל</string>
 </resources>

@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -205,7 +206,8 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
         EditText phoneNumber = (EditText) findViewById(R.id.editTextPhone);
         String phoneNum = phoneNumber.getText().toString();
         EditText activationDistanceView = (EditText) findViewById(R.id.editTextDistance);
-        ToggleButton tb = (ToggleButton) findViewById(R.id.toggleButtonUseAlarm);
+        RadioButton rbOn = (RadioButton) findViewById(R.id.radioButtonUseAlarm);
+        RadioButton rbOff = (RadioButton) findViewById(R.id.radioButtonBorrowLoc);
         Integer activationDistance = null;
         try {
             activationDistance = Integer.decode(activationDistanceView.getText().toString());
@@ -233,7 +235,7 @@ public class ConfigActivity extends FragmentActivity implements GoogleApiClient.
                 phoneNum = GetPhoneFromName(contactNameID.get(phoneNum));
             }
             state = ACTIVITY_STATE.LOCATION;
-            SavePhoneChooseGate(phoneNum, activationDistance, tb.isChecked());
+            SavePhoneChooseGate(phoneNum, activationDistance, rbOn.isChecked() && !rbOff.isChecked());
         }
     }
 

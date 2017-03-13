@@ -36,22 +36,16 @@ import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
  * <p>
  */
 
-public class OpenAppService extends IntentService implements ResultCallback,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
-    private static final String ACTION_START = "com.ksdagile.openapp.action.START";
-    private static final String ACTION_STOP = "com.ksdagile.openapp.action.STOP";
+public class OpenAppService extends IntentService{
+
     private static final String GATE_REQUEST_ID = "com.ksdagile.openap.id.GATE_REQUEST";
 
     Geofence gateGeofence;
     private PendingIntent gateGeofencePendingIntent;
 
-    private GoogleApiClient googleApiClient;
-    private boolean isGoogleConnected;
-    CountDownTimer timer;
 
     private OpenAppService thisService = this;
     private long countdownMS;
-    private Location LastLocation;
     private static GateSettings gateSettings;
     private float distance2Gate;
     Handler serviceHandler;
@@ -76,7 +70,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
         gateSettings = GateSettings.GetInstance(context);
         if (gateSettings.GetLicenseStatus() == Constants.LICENSE_ALLOWED) {
             Intent intent = new Intent(context, OpenAppService.class);
-            intent.setAction(ACTION_START);
+            intent.setAction(Constants.ACTION_START);
             context.startService(intent);
             Toast.makeText(context, context.getResources().getText(R.string.starting), Toast.LENGTH_LONG).show();
         } else {
@@ -92,7 +86,7 @@ public class OpenAppService extends IntentService implements ResultCallback,
      */
     public static void StopGateService(Context context) {
         Intent intent = new Intent(context, OpenAppService.class);
-        intent.setAction(ACTION_STOP);
+        intent.setAction(Constants.ACTION_STOP);
         Toast.makeText(context, context.getResources().getText(R.string.stopping), Toast.LENGTH_LONG).show();
         context.startService(intent);
         gateSettings = GateSettings.GetInstance(context);
@@ -102,42 +96,10 @@ public class OpenAppService extends IntentService implements ResultCallback,
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_START.equals(action)) {
+            if (Constants.ACTION_START.equals(action)) {
                 handleActionStart();
-                Log.d(Constants.TAG, "OpenApp Service Started");
-            } else if (ACTION_STOP.equals(action)) {
+            } else if (Constants.ACTION_STOP.equals(action)) {
                 handleActionStop();
-                Log.d(Constants.TAG, "OpenApp Service Stopped");
-            } else { // Handle Geofence events
-                GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
-                if (geofencingEvent.hasError()) {
-                    String errorMessage =
-                            String.format("GeofenceError %d", geofencingEvent.getErrorCode());
-                    Log.e(Constants.TAG, errorMessage);
-                    return;
-                }
-
-                // Get the transition type.
-                int geofenceTransition = geofencingEvent.getGeofenceTransition();
-
-                // Test that the reported transition was of interest.
-                if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-
-                    // Get the geofences that were triggered. A single event can trigger
-                    // multiple geofences.
-                    //List triggeringGeofences = geofencingEvent.getTriggeringGeofences();
-
-                    // Start phone call
-                    CallGatePhone();
-                    Log.d(Constants.TAG, "Opened gate");
-                    // Send notification and log the transition details.
-                    //sendNotification(geofenceTransitionDetails);
-                    // Log.i(TAG, geofenceTransitionDetails);
-                } else {
-                    // Log the error.
-                    Log.e(Constants.TAG, getResources().getString(R.string.geofence_transition_invalid_type) + ": " + geofencingEvent.toString());
-                }
-
             }
         }
     }
@@ -153,116 +115,32 @@ public class OpenAppService extends IntentService implements ResultCallback,
      */
     private void handleActionStart() {
 
-        serviceHandler = new Handler(Looper.getMainLooper()) {
-            @Override
-            public void handleMessage(Message inputMessage) {
-                CalculateGateDistance();
-                if (distance2GateState == DISTANCE2GATE.NEAR_GATE) {
-                    if (!isCallMade)
-                        CallGatePhone();
-                    countdownMS = 5000; // run 5 second timer to check status
-                    isCallMade = true;
-                } else {
-                    CalcCountdown();
-                    isCallMade = false;
-                }
-                RestartTimer();
-            }
-        };
-
-        // Create an instance of GoogleAPIClient.
-        if (googleApiClient == null) {
-            isGoogleConnected = false;
-            googleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
+        Intent intent = null;
+        if (gateSettings.GetIsUseAlarm()) {
+            intent = new Intent(getApplicationContext(), AlarmOpenGateService.class);
+        } else {
+            intent = new Intent(getApplicationContext(), APIOpenGateService.class);
         }
-        googleApiClient.connect();
+
+        intent.setAction(Constants.ACTION_START);
+        startService(intent);
     }
-
-    private void CalculateGateDistance() {
-        try {
-
-            LastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                    googleApiClient);
-            if (LastLocation != null) {
-                float[] results = new float[1];
-                Location.distanceBetween(LastLocation.getLatitude(), LastLocation.getLongitude(), gateSettings.GetLatitude(), gateSettings.GetLongitude(), results);
-                distance2Gate = results[0];
-                Log.d(Constants.TAG, "Distance to gate: " + Float.toString(distance2Gate));
-                if (gateSettings.GetActivationDistance() > distance2Gate) {
-                    distance2GateState = DISTANCE2GATE.NEAR_GATE;
-                } else {
-                    distance2GateState = DISTANCE2GATE.FAR_GATE;
-                }
-            }
-        } catch (SecurityException secEx) {
-            secEx.printStackTrace();
-        }
-    }
-
 
     /**
      * Stop location tracking.
      */
     private void handleActionStop() {
-
-        if (googleApiClient != null) {
-
-            if (timer != null)
-                timer.cancel();
+        Intent intent = null;
+        if (gateSettings.GetIsUseAlarm()) {
+            intent = new Intent(getApplicationContext(), AlarmOpenGateService.class);
+        } else {
+            intent = new Intent(getApplicationContext(), APIOpenGateService.class);
         }
+
+        intent.setAction(Constants.ACTION_STOP);
+        startService(intent);
+
+
     }
 
-
-    @Override
-    public void onResult(@NonNull Result result) {
-
-    }
-
-    /*
-    * GoogleApiClient Support
-     */
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        isGoogleConnected = true;
-        serviceHandler.sendEmptyMessage(0);
-        Log.d(Constants.TAG, "Connected to Google API");
-    }
-
-    private void RestartTimer() {
-        timer = new CountDownTimer(countdownMS, countdownMS) {
-            @Override
-            public void onTick(long l) {
-
-            }
-
-            @Override
-            public void onFinish() {
-                serviceHandler.sendEmptyMessage(0);
-            }
-        };
-        timer.start();
-    }
-
-    // countdown to next check assumes 100 kph travel = 100000/(60*60)
-    private void CalcCountdown() {
-        countdownMS = (long) (distance2Gate / (100000.0 / (60.0 * 60.0)));
-        if (countdownMS < 5000)
-            countdownMS = 5000;
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        isGoogleConnected = false;
-        Log.d(Constants.TAG, "Connection to Google suspended");
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        isGoogleConnected = false;
-        Log.d(Constants.TAG, "Connection to Google failed");
-    }
 }
