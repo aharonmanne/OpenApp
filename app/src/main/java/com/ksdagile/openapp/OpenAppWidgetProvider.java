@@ -1,6 +1,7 @@
 package com.ksdagile.openapp;
 
 
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -10,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.LocationManager;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.RemoteViews;
@@ -24,12 +26,19 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_CLICK = "ACTION_CLICK";
     public static final String WIDGET_IDS_KEY = "OA_WIDGET_IDS";
     private static final String IsToggleName = "IS_TOGGLE";
+    private static final long ONE_MINUTE = 60*1000;
     private boolean isToggle;
+    Context context;
+    private AlarmManager alarmMgr;
+
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d("AppWidgetProvider", "OnReceive");
         isToggle = false;
+        this.context = context;
+        alarmMgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+
         if (intent.hasExtra(IsToggleName)) {
             isToggle = intent.getBooleanExtra(IsToggleName, false);
         }
@@ -56,47 +65,38 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
                          int[] appWidgetIds) {
 
         Log.d("AppWidgetProvider", "onUpdate");
-        // Get all ids
+       // Get all ids
         ComponentName thisWidget =
                 new ComponentName(context, OpenAppWidgetProvider.class);
         GateSettings settings = GateSettings.GetInstance(context);
+        RemoteViews remoteViews =
+                new RemoteViews(context.getPackageName(), R.layout.widget_layout);
 
-        int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-        boolean isRunning = settings.GetIsRunning();
-        boolean isSaved = settings.GetIsSaved();
         Bitmap bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.gate_icon);
-        if (isSaved) {
-            Log.d(Constants.TAG, "Config Saved");
-            isRunning = !isRunning;
-            settings.SetIsRunning(isRunning);
-            if (isToggle) {
-                if (isRunning) {
-                    if (IsGPSon(context)) {
-                        OpenAppService.StartGateService(context);
-                    } else {
-                        Toast.makeText(context, context.getResources().getText(R.string.gps_required).toString(), Toast.LENGTH_SHORT).show();
-                        isRunning = false;
-                        settings.SetIsNewWidget(isRunning);
-                        Intent i = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(i);
-                    }
-                } else {
-                    OpenAppService.StopGateService(context);
-                }
-            } else {
-                isRunning = false;
-                settings.SetIsRunning(isRunning);
-            }
-            if (isRunning)
-                bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_on);
-            else
-                bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_off);
-        }
 
-        RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
-                R.layout.widget_layout);
+        if (!settings.GetIsSaved()) {
+            Log.d(Constants.TAG, "No Config, starting Activity");
+            Intent intent = new Intent(context, ConfigActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+
+        } else {
+            if (isToggle) {
+                boolean isRunning = settings.GetIsRunning();
+                if (isRunning) {
+                    StopAlarms();
+                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_off);
+                } else {
+                    StartAlarms();
+                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_on);
+                }
+                settings.SetIsRunning(!isRunning);
+            }
+
+        }
         remoteViews.setImageViewBitmap(R.id.toggle, bm);
+        // set click event in all  cases
+        int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
 
         for (int widgetId : allWidgetIds) {
 
@@ -111,12 +111,21 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
             appWidgetManager.updateAppWidget(widgetId, remoteViews);
         }
-        if (!isSaved) {
-            Log.d(Constants.TAG, "No Config, starting Activity");
-            Intent intent = new Intent(context, ConfigActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        }
+
+    }
+
+    private void StartAlarms() {
+        Toast.makeText(context, context.getResources().getText(R.string.starting), Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(context, OpenAppService.class);
+        intent.setAction(Constants.ACTION_START);
+        context.sendBroadcast(intent);
+    }
+
+    private void StopAlarms() {
+        Toast.makeText(context, context.getResources().getText(R.string.stopping), Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(context, OpenAppService.class);
+        intent.setAction(Constants.ACTION_STOP);
+        context.sendBroadcast(intent);
     }
 
     private boolean IsGPSon(Context context) {

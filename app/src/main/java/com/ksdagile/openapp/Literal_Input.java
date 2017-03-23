@@ -17,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
@@ -53,8 +54,10 @@ public class Literal_Input extends Fragment {
         Integer distance = settings.GetActivationDistance();
         if (distance > 0)
             distanceView.setText(distance.toString());
-        ToggleButton useAlarm = (ToggleButton) v.findViewById(R.id.toggleButtonUseAlarm);
+        RadioButton useAlarm = (RadioButton) v.findViewById(R.id.radioButtonUseAlarm);
+        RadioButton borrowGPS = (RadioButton) v.findViewById(R.id.radioButtonBorrowLoc);
         useAlarm.setChecked(settings.GetIsUseAlarm());
+        borrowGPS.setChecked(!settings.GetIsUseAlarm());
 
         ArrayAdapter<String> contactArrayAdapter =
                 new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, getContacts());

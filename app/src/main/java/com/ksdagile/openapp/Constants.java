@@ -11,4 +11,8 @@ public class Constants {
     public static final int LICENSE_NO_ANSWER = 0;
     public static final int LICENSE_ALLOWED = 1;
     public static final int LICENSE_REJECTED = -1;
+    public static final String ACTION_START = "com.ksdagile.openapp.StartService";
+    public static final String ACTION_STOP = "com.ksdagile.openapp.StopService";
+    public static final String CHECK_LOC = "com.ksdagile.openapp.CheckLocation";
+
 }

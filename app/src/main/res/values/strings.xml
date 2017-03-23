@@ -5,18 +5,13 @@
     <string name="phone_hint">Enter Phone Number or Contact</string>
     <string name="phone_required">Phone Number Required</string>
     <string name="title_activity_gate_location">Gate Location</string>
-    <string name="geofence_transition_invalid_type">Invalid Geofence Transition</string>
     <string name="cannot_dial">Cannot Dial</string>
     <string name="no_phone">phone number not saved</string>
     <string name="no_location">Location not saved</string>
-    <string name="no_license">No License</string>
     <string name="starting">Starting OpenApp Service</string>
     <string name="stopping">Stopping Service</string>
-    <string name="config_title">OpenApp Configuration</string>
-    <string name="gps_required">Please turn on location services (GPS)</string>
     <string name="distance_hint">Activation Distance in Meters</string>
-    <string name="use_alarm">Wake As Needed</string>
-    <string name="alarm_explain">Activate this button when the service may need to wake phone from sleep mode. Not needed when service works in parallel to location based application such as Waze or Google Maps.</string>
-    <string name="alarm_on">Own GPS</string>
-    <string name="alarm_off">Borrow GPS</string>
+    <string name="alarm_explain">Select \"Borrow Location\" when following current location with an app such as Waze or Google Maps, otherwise select \"Own Location\"</string>
+    <string name="alarm_on">Own Location</string>
+    <string name="alarm_off">Borrow Location</string>
 </resources>
