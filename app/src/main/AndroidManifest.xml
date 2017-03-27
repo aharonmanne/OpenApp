@@ -40,7 +40,7 @@
         </receiver>
 
         <receiver
-            android:name=".OpenAppService"
+            android:name=".OpenAppAlarmService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.ksdagile.openapp.StartService" />

@@ -11,9 +11,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.LocationManager;
-import android.os.SystemClock;
 import android.util.Log;
-import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -26,7 +24,7 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
     private static final String ACTION_CLICK = "ACTION_CLICK";
     public static final String WIDGET_IDS_KEY = "OA_WIDGET_IDS";
     private static final String IsToggleName = "IS_TOGGLE";
-    private static final long ONE_MINUTE = 60*1000;
+    private static final long ONE_MINUTE = 60 * 1000;
     private boolean isToggle;
     Context context;
     private AlarmManager alarmMgr;
@@ -37,7 +35,7 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
         Log.d("AppWidgetProvider", "OnReceive");
         isToggle = false;
         this.context = context;
-        alarmMgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        alarmMgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         if (intent.hasExtra(IsToggleName)) {
             isToggle = intent.getBooleanExtra(IsToggleName, false);
@@ -65,7 +63,7 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
                          int[] appWidgetIds) {
 
         Log.d("AppWidgetProvider", "onUpdate");
-       // Get all ids
+        // Get all ids
         ComponentName thisWidget =
                 new ComponentName(context, OpenAppWidgetProvider.class);
         GateSettings settings = GateSettings.GetInstance(context);
@@ -83,12 +81,16 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
         } else {
             if (isToggle) {
                 boolean isRunning = settings.GetIsRunning();
-                if (isRunning) {
-                    StopAlarms();
-                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_off);
-                } else {
-                    StartAlarms();
-                    bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_on);
+                try {
+                    if (isRunning) {
+                        StopAlarms(settings);
+                        bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_off);
+                    } else {
+                        StartAlarms(settings);
+                        bm = BitmapFactory.decodeResource(context.getResources(), R.drawable.service_on);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 settings.SetIsRunning(!isRunning);
             }
@@ -114,18 +116,27 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
 
     }
 
-    private void StartAlarms() {
+    private void StartAlarms(GateSettings settings) throws Exception {
         Toast.makeText(context, context.getResources().getText(R.string.starting), Toast.LENGTH_LONG).show();
-        Intent intent = new Intent(context, OpenAppService.class);
-        intent.setAction(Constants.ACTION_START);
-        context.sendBroadcast(intent);
+        if (settings.GetIsUseAlarm()) {
+            Intent intent = new Intent(context, OpenAppAlarmService.class);
+            intent.setAction(Constants.ACTION_START);
+            context.sendBroadcast(intent);
+        } else {
+            throw new Exception("Not Yet Implemented");
+        }
     }
 
-    private void StopAlarms() {
+    private void StopAlarms(GateSettings settings) throws Exception {
         Toast.makeText(context, context.getResources().getText(R.string.stopping), Toast.LENGTH_LONG).show();
-        Intent intent = new Intent(context, OpenAppService.class);
-        intent.setAction(Constants.ACTION_STOP);
-        context.sendBroadcast(intent);
+        if (settings.GetIsUseAlarm()) {
+            Intent intent = new Intent(context, OpenAppAlarmService.class);
+            intent.setAction(Constants.ACTION_STOP);
+            context.sendBroadcast(intent);
+        } else {
+            throw new Exception("Not Yet Implemented");
+        }
+
     }
 
     private boolean IsGPSon(Context context) {
