@@ -49,6 +49,10 @@
             </intent-filter>
         </receiver>
 
+        <service
+            android:name=".OpenAppService"
+            android:enabled="true" />
+
         <activity
             android:name=".ConfigActivity"
             android:icon="@drawable/gate_icon"

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">OpenApp</string>
     <string name="save">Save</string>
-    <string name="title_activity_config">ConfigActivity</string>
+    <string name="title_activity_config">OpenApp Config</string>
     <string name="phone_hint">Enter Phone Number or Contact</string>
     <string name="phone_required">Phone Number Required</string>
     <string name="title_activity_gate_location">Gate Location</string>
@@ -14,4 +14,9 @@
     <string name="alarm_explain">Select \"Borrow Location\" when following current location with an app such as Waze or Google Maps, otherwise select \"Own Location\"</string>
     <string name="alarm_on">Own Location</string>
     <string name="alarm_off">Borrow Location</string>
+    <string name="geofence_transition_invalid_type">Invalid Geofence Transition</string>
+    <string name="config_title">OpenApp Configuration</string>
+    <string name="gps_required">GPS Required</string>
+    <string name="no_license">No Product License</string>
+    <string name="use_alarm">Wakes telephone when in sleep mode</string>
 </resources>

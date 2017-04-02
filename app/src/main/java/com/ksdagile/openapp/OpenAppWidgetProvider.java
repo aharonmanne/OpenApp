@@ -113,7 +113,6 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             remoteViews.setOnClickPendingIntent(R.id.toggle, pendingIntent);
             appWidgetManager.updateAppWidget(widgetId, remoteViews);
         }
-
     }
 
     private void StartAlarms(GateSettings settings) throws Exception {
@@ -123,7 +122,9 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             intent.setAction(Constants.ACTION_START);
             context.sendBroadcast(intent);
         } else {
-            throw new Exception("Not Yet Implemented");
+            Intent intent = new Intent(context, OpenAppService.class);
+            intent.setAction(Constants.ACTION_START);
+            context.startService(intent);
         }
     }
 
@@ -134,7 +135,9 @@ public class OpenAppWidgetProvider extends AppWidgetProvider {
             intent.setAction(Constants.ACTION_STOP);
             context.sendBroadcast(intent);
         } else {
-            throw new Exception("Not Yet Implemented");
+            Intent intent = new Intent(context, OpenAppService.class);
+            intent.setAction(Constants.ACTION_STOP);
+            context.startService(intent);
         }
 
     }
